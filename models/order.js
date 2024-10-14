@@ -32,15 +32,21 @@ const orderSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'],
+        enum: ['Pending','Confirmed', 'Shipped', 'Delivered', 'Cancelled'],
         default: 'Pending',
     },
     paymentMethod: {
         type: String,
-        enum: ['COD'],
+        enum: ['COD', 'Razorpay','Wallet'],
         default: 'COD',
         required: true,
     },
+    couponDiscound:{
+        type : Number
+      },
+      offerDiscound:{
+        type : Number
+      },
     paymentStatus: {
         type: String,
         enum: ['Pending', 'Paid', 'Failed'],

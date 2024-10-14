@@ -13,26 +13,7 @@
             </div>
         </div>
         <div class="card mb-4">
-            <header class="card-header">
-                <div class="row gx-3">
-                    <div class="col-lg-4 col-md-6 me-auto">
-                        <input type="text" placeholder="Search..." class="form-control" />
-                    </div>
-                    <div class="col-lg-2 col-6 col-md-3">
-                        <select class="form-select">
-                            <option>All category</option>
-                            <option>Electronics</option>
-                            <option>Clothings</option>
-                            <option>Something else</option>
-                        </select>
-                    </div>
-                    <div class="col-lg-2 col-6 col-md-3">
-                        <select class="form-select">
-                            <option>Latest added</option>
-                        </select>
-                    </div>
-                </div>
-            </header>
+            
             <!-- card-header end// -->
             <div class="card-body">
                 <div class="row gx-3 row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 row-cols-xxl-5">
@@ -55,7 +36,7 @@
                                     <a href="#" class="title text-truncate">
                                         <%= product.name %>
                                     </a>
-                                    <div class="price mb-2">$<%= product.price %>
+                                    <div class="price mb-2">₹<%= product.price %>
                                     </div>
 
                                     <a href="editProduct/<%= product._id %>"
@@ -80,7 +61,7 @@
             </div>
 
             <!-- card end// -->
-            <div class="pagination-area mt-30 mb-50">
+            <!-- <div class="pagination-area mt-30 mb-50">
                 <nav aria-label="Page navigation example">
                     <ul class="pagination justify-content-start">
                         <li class="page-item active"><a class="page-link" href="#">01</a></li>
@@ -93,7 +74,7 @@
                         </li>
                     </ul>
                 </nav>
-            </div>
+            </div> -->
     </section>
     <script>
         function productBlock(productId) {

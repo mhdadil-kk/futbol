@@ -4,10 +4,14 @@ const nodemailer = require('nodemailer');
 const Product = require('../models/product');
 const { validationResult } = require('express-validator');
 const Address = require('../models/address');
+const Wishlist = require('../models/wishlist');
+const crypto = require('crypto'); 
+const Wallet = require('../models/wallet');
+const Category = require('../models/category');
+const Offer = require('../models/offer');
 
 require('dotenv').config(); // Load environment variables
 
-// Configure nodemailer using environment variables
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -96,9 +100,9 @@ const registerUser = async (req, res) => {
         });
       }
 
-        const { name, email, mobile, password, Confirmpassword } = req.body;
+        const { name, email, mobile, password, confirmPassword } = req.body;
 
-        if (!name || !email || !mobile || !password ,!Confirmpassword) {
+        if (!name || !email || !mobile || !password ,!confirmPassword) {
             return res.status(400).render('user/register', { errors: [] ,error: 'All fields are required' });
         }
 
@@ -107,7 +111,12 @@ const registerUser = async (req, res) => {
         if (existingUser) {
             return res.status(400).render('user/register', { errors: [],error: 'Email already registered.' });
         }
+       
+     
 
+
+        
+       if(!req.session.userData){
         const sPassword = await securePassword(password);
         const otp = generateOTP();
         console.log(otp)
@@ -117,7 +126,7 @@ const registerUser = async (req, res) => {
 
         
         await sendOTPEmail(email, otp);
-
+       }
        
         res.render('user/verifyOTP', { email, error: null ,success :null ,errors: [] });
     } catch (error) {
@@ -228,10 +237,121 @@ const verifyLogin = async (req, res) => {
     }
 }
 
+
+
+// Forgot Password route
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        let error = null;
+        let success = null;
+
+        if (!email) {
+            error = 'Email is required';
+            return res.render('user/forgotPassword', { error, success });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            error = 'User with this email does not exist';
+            return res.render('user/forgotPassword', { error, success });
+        }
+
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const tokenExpiry = Date.now() + 3600000;
+       console.log(resetToken)
+        user.resetPasswordToken = resetToken;
+        user.resetPasswordExpires = tokenExpiry;
+        await user.save();
+
+        const resetURL = `${req.protocol}://${req.get('host')}/reset-password/${resetToken}`;
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: user.email,
+            subject: 'Password Reset',
+            text: `You requested a password reset. Click the link to reset your password: ${resetURL}`
+        };
+        await transporter.sendMail(mailOptions);
+
+        success = 'Password reset link has been sent to your email';
+        res.render('user/forgotPassword', { error, success });
+    } catch (error) {
+        console.error(error);
+        error = 'An error occurred while processing your request';
+        res.render('user/forgotPassword', { error, success: null });
+    }
+};
+
+
+
+
+
+// Load Reset Password Form
+const loadResetPassword = async (req, res) => {
+    try {
+        const resetToken = req.params.token;
+
+        const user = await User.findOne({
+            resetPasswordToken: resetToken,
+            resetPasswordExpires: { $gt: Date.now() } // Check if the token is not expired
+        });
+
+        if (!user) {
+            return res.render('user/resetPassword', { error: 'Password reset token is invalid or has expired', token: null });
+        }
+
+        // Render the reset password form with the token
+        res.render('user/resetPassword', { token: resetToken, error: null });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send('Server Error');
+    }
+};
+
+// Reset Password logic
+const resetPassword = async (req, res) => {
+    try {
+        const { token, newPassword, confirmPassword } = req.body;
+
+        if (!newPassword || !confirmPassword) {
+            return res.render('user/resetPassword', { error: 'All fields are required', token });
+        }
+
+        if (newPassword !== confirmPassword) {
+            return res.render('user/resetPassword', { error: 'Passwords do not match', token });
+        }
+
+        const user = await User.findOne({
+            resetPasswordToken: token,
+            resetPasswordExpires: { $gt: Date.now() } // check if token is still valid
+        });
+
+        if (!user) {
+            return res.render('user/resetPassword', { error: 'Token is invalid or has expired', token });
+        }
+
+        // Hash the new password
+        const hashedPassword = await securePassword(newPassword);
+
+        // Update user's password
+        user.password = hashedPassword;
+        user.resetPasswordToken = undefined; // remove the token after use
+        user.resetPasswordExpires = undefined; // remove token expiry
+        await user.save();
+
+    res.redirect('/login')
+    } catch (error) {
+        console.log(error);
+        res.status(500).send('Server Error');
+    }
+};
+
+
+
 const loadHome = async (req, res) => {
     try {
 
-        const products = await Product.find({ status: false }).sort({ createdAt: -1 });
+        const products = await Product.find({ status: false }).sort({ createdAt: -1 }).limit(4);
         res.render('user/index' ,{products});
        
     } catch (error) {
@@ -251,11 +371,12 @@ const loadProfile = async (req, res) => {
 
         const user = await User.findById(req.session.user_id); 
         const addresses = await Address.find({ user: user._id });
+        const wallet  = await Wallet.find({user : user._id})
         if (!user) {
             return res.redirect('/login'); 
         }
 
-        res.render('user/profile', { user  ,addresses }); 
+        res.render('user/profile', { user  ,addresses ,wallet }); 
     } catch (error) {
         console.error(error);
         res.status(500).send('Server Error');
@@ -287,35 +408,260 @@ const updateProfile = async (req, res) => {
     }
 };
 
-const loadShop = async(req,res) =>{
-    try{
-        const products = await Product.find({status:false})
-     res.render('user/shop',{products  })
-        
-    }catch(error){
-        console.log(error)
+
+// Load Shop Function
+const loadShop = async (req, res) => {
+    try {
+        const userWishlist = await Wishlist.findOne({ user: req.session.user_id });
+
+        const products = await Product.find().populate('category'); // Fetch all products and populate their categories
+        const categories = await Category.find({ is_hide: false });
+
+        const activeOffers = await Offer.find({ 
+            status: true, 
+            expiryDate: { $gte: new Date() } 
+        });
+
+        // Filter out hidden products and products with hidden categories
+        const visibleProducts = products.filter(product => product.status === false && product.category.is_hide === false);
+
+        // Apply offers to the filtered products
+        const productData = visibleProducts.map(product => {
+            let applicableOffer = null;
+            let offerPrice = null;
+
+            const productOffer = activeOffers.find(offer => offer.offerType === 'product' && offer.selectItem.equals(product._id));
+            const categoryOffer = activeOffers.find(offer => offer.offerType === 'category' && offer.selectItem.equals(product.category._id));
+
+            if (productOffer) applicableOffer = productOffer;
+            else if (categoryOffer) applicableOffer = categoryOffer;
+
+            if (applicableOffer) {
+                offerPrice = product.price - (product.price * (applicableOffer.discountPercentage / 100));
+            }
+
+            return { 
+                ...product._doc, 
+                offer: applicableOffer, 
+                offerPrice,
+                discountPercentage: applicableOffer ? applicableOffer.discountPercentage : 0
+            };
+        });
+
+        res.render('user/shop', { products: productData, wishlist: userWishlist ? userWishlist.product : [], categories });
+    } catch (error) {
+        console.log('Error loading shop:', error);
+        res.status(500).send('Server Error');
     }
-}
+};
 
-const loadProductDetails = async(req, res) => {
-    const productId =   req.params.id
-    try{
-     console.log(productId)
-     const Products = await Product.find({status:false})
-     const product =  await Product.findById({_id:productId })
-   
-     if(!product.status){
-        res.render('user/shop-details',{product  , Products });
+// Filter By Category Function
+const filterByCategory = async (req, res) => {
+    try {
+        const categoryName = req.query.category;
+        const category = await Category.findOne({ name: categoryName });
 
-     }else{
-        res.render('admin/404')
-     }
+        if (!category) {
+            return res.status(404).json({ message: 'Category not found' });
+        }
 
-    }catch(error){
-        console.log(error)
+        let products = await Product.find({ category: category._id }).populate('category'); // Fetch all products in category
+
+        const activeOffers = await Offer.find({ 
+            status: true, 
+            expiryDate: { $gte: new Date() } 
+        });
+
+        // Filter out hidden products and products with hidden categories
+        const visibleProducts = products.filter(product => product.status === false && product.category.is_hide === false);
+
+        const productData = visibleProducts.map(product => {
+            let applicableOffer = null;
+            let offerPrice = null;
+
+            const productOffer = activeOffers.find(offer => offer.offerType === 'product' && offer.selectItem.equals(product._id));
+            const categoryOffer = activeOffers.find(offer => offer.offerType === 'category' && offer.selectItem.equals(product.category._id));
+
+            if (productOffer) applicableOffer = productOffer;
+            else if (categoryOffer) applicableOffer = categoryOffer;
+
+            if (applicableOffer) {
+                offerPrice = product.price - (product.price * (applicableOffer.discountPercentage / 100));
+            }
+
+            return { 
+                ...product._doc, 
+                offer: applicableOffer, 
+                offerPrice,
+                discountPercentage: applicableOffer ? applicableOffer.discountPercentage : 0
+            };
+        });
+
+        res.json(productData);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
     }
-   
-}
+};
+
+// Load Advanced Search Function
+const loadAdvancedSearch = async (req, res) => {
+    const sortOption = req.query.sort;
+    let sort = {};
+
+    switch (sortOption) {
+        case 'popularity': sort.popularity = -1; break;
+        case 'price_asc': sort.price = 1; break;
+        case 'price_desc': sort.price = -1; break;
+        case 'avg_rating': sort.averageRating = -1; break;
+        case 'featured': sort.featured = -1; break;
+        case 'new_arrivals': sort.createdAt = -1; break;
+        case 'az': sort.name = 1; break;
+        case 'za': sort.name = -1; break;
+        default: sort.popularity = -1; break;
+    }
+
+    try {
+        const products = await Product.find().populate('category').sort(sort); // Fetch all products and sort
+
+        const activeOffers = await Offer.find({ 
+            status: true, 
+            expiryDate: { $gte: new Date() } 
+        });
+
+        // Filter out hidden products and products with hidden categories
+        const visibleProducts = products.filter(product => product.status === false && product.category.is_hide === false);
+
+        const productData = visibleProducts.map(product => {
+            let applicableOffer = null;
+            let offerPrice = null;
+
+            const productOffer = activeOffers.find(offer => offer.offerType === 'product' && offer.selectItem.equals(product._id));
+            const categoryOffer = activeOffers.find(offer => offer.offerType === 'category' && offer.selectItem.equals(product.category._id));
+
+            if (productOffer) applicableOffer = productOffer;
+            else if (categoryOffer) applicableOffer = categoryOffer;
+
+            if (applicableOffer) {
+                offerPrice = product.price - (product.price * (applicableOffer.discountPercentage / 100));
+            }
+
+            return { 
+                ...product._doc, 
+                offer: applicableOffer, 
+                offerPrice,
+                discountPercentage: applicableOffer ? applicableOffer.discountPercentage : 0
+            };
+        });
+
+        res.json(productData); 
+    } catch (err) {
+        console.log('Load Advanced Search error:', err);
+        res.status(500).send('Server Error');
+    }
+};
+
+// Search Function
+const search = async (req, res) => {
+    try {
+        const query = req.query.query ? req.query.query.trim() : '';
+
+        if (!query) {
+            const defaultProducts = await Product.find({ status: false });
+            return res.json(defaultProducts);
+        }
+
+        const products = await Product.find({
+            name: { $regex: query, $options: 'i' }
+        }).populate('category');
+
+        const activeOffers = await Offer.find({ 
+            status: true, 
+            expiryDate: { $gte: new Date() } 
+        });
+
+        // Filter out hidden products and products with hidden categories
+        const visibleProducts = products.filter(product => product.status === false && product.category.is_hide === false);
+
+        const productData = visibleProducts.map(product => {
+            let applicableOffer = null;
+            let offerPrice = null;
+
+            const productOffer = activeOffers.find(offer => offer.offerType === 'product' && offer.selectItem.equals(product._id));
+            const categoryOffer = activeOffers.find(offer => offer.offerType === 'category' && offer.selectItem.equals(product.category._id));
+
+            if (productOffer) applicableOffer = productOffer;
+            else if (categoryOffer) applicableOffer = categoryOffer;
+
+            if (applicableOffer) {
+                offerPrice = product.price - (product.price * (applicableOffer.discountPercentage / 100));
+            }
+
+            return { 
+                ...product._doc, 
+                offer: applicableOffer, 
+                offerPrice,
+                discountPercentage: applicableOffer ? applicableOffer.discountPercentage : 0
+            };
+        });
+
+        res.json(productData);
+    } catch (err) {
+        console.error('Search error:', err);
+        res.status(500).json({ error: 'An error occurred while searching for products.' });
+    }
+};
+
+// Load Product Details Function
+const loadProductDetails = async (req, res) => {
+    const userWishlist = await Wishlist.findOne({ user: req.session.user_id ? req.session.user_id : null });
+    const productId = req.params.id;
+    try {
+        const product = await Product.findById(productId).populate('category'); // Fetch product and its category
+        const activeOffers = await Offer.find({
+            status: true,
+            expiryDate: { $gte: new Date() }
+        });
+
+        if (!product || product.status === true || product.category.is_hide === true) {
+            return res.render('admin/404'); // Handle hidden product or hidden category
+        }
+
+        let applicableOffer = null;
+        let offerPrice = null;
+
+        const productOffer = activeOffers.find(offer => offer.offerType === 'product' && offer.selectItem.equals(product._id));
+        const categoryOffer = activeOffers.find(offer => offer.offerType === 'category' && offer.selectItem.equals(product.category._id));
+
+        if (productOffer) applicableOffer = productOffer;
+        else if (categoryOffer) applicableOffer = categoryOffer;
+
+        if (applicableOffer) {
+            offerPrice = product.price - (product.price * (applicableOffer.discountPercentage / 100));
+        }
+
+        // Fetch related products (from the same category, excluding the current product)
+        const relatedProducts = await Product.find({
+            category: product.category._id,
+            _id: { $ne: product._id } // Exclude the current product
+        });
+
+        res.render('user/shop-details', {
+            product: {
+                ...product._doc,
+                offerPrice,
+                discountPercentage: applicableOffer ? applicableOffer.discountPercentage : 0
+            },
+            offer: applicableOffer,
+            Products: relatedProducts ,wishlist: userWishlist ? userWishlist.product : []
+        });
+    } catch (err) {
+        console.log('Error loading product details:', err);
+        res.status(500).send('Server Error');
+    }
+};
+
+
 
 const addAddress = async(req,res)=>{
     const { userId, name, streetAddress, state, district, pinCode, mobile, country } = req.body;
@@ -381,17 +727,25 @@ const updateAddress = async (req, res) => {
 
 const deleteAddress = async (req, res) => {
     try {
-        const  id  = req.query.id;
+        const id = req.query.id;
 
-        await Address.deleteOne({_id:id});
+        if (!id) {
+            return res.status(400).send({ message: 'Address ID is required' });
+        }
 
-       
-    }catch(error){
-     
-        console.log(error.message)
+        const result = await Address.deleteOne({ _id: id });
+        
+        if (result.deletedCount === 0) {
+            return res.status(404).send({ message: 'Address not found' });
+        }
 
+        res.status(200).send({ message: 'Address deleted successfully' });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send({ message: 'An error occurred while deleting the address' });
     }
 }
+
 
 
 
@@ -422,10 +776,16 @@ module.exports = {
     verifyOTP,
     loadLogin,
     verifyLogin,
+    loadResetPassword,
+    resetPassword,
+    forgotPassword,
     loadHome,
     loadProfile,
     updateProfile,
     loadShop,
+    filterByCategory,
+    loadAdvancedSearch,
+    search,
     loadProductDetails,
     addAddress,
     updateAddress,

@@ -13,12 +13,11 @@ const userSchema = new Schema({
     },
     mobile: {
         type: Number,
-       
     },
     password: {
         type: String,
     },
-    is_blocked:{
+    is_blocked: {
         type: Boolean,
         default: false,
     },
@@ -29,6 +28,16 @@ const userSchema = new Schema({
     isVerified: {
         type: Boolean,
         default: false,
+    },
+    resetPasswordToken: {
+        type: String,
+    },
+    resetPasswordExpires: {
+        type: Date,
+    },
+    wallet_balance: {
+        type: Number,
+        default: 0, 
     },
 }, {
     timestamps: true

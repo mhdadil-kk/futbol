@@ -1,4 +1,7 @@
 <%- include('header') %>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet"/>
+
+
 <style>
     .product__cart__item__pic img {
         width: 100px;
@@ -15,21 +18,16 @@
     .qty-btn:hover {
         background: #ddd;
     }
-
- .qty-2 {
-    display: flex;
-    align-items: center;
-}
-
-.qty-2 input {
-    border: none;
-    width: 50px;
-    text-align: center;
-    margin: 0 5px; /* Space between buttons and input */
-}
-
-
-
+    .qty-2 {
+        display: flex;
+        align-items: center;
+    }
+    .qty-2 input {
+        border: none;
+        width: 50px;
+        text-align: center;
+        margin: 0 5px; /* Space between buttons and input */
+    }
 </style>
 
 <!-- Breadcrumb Section Begin -->
@@ -76,7 +74,14 @@
                                             </div>
                                             <div class="product__cart__item__text">
                                                 <h6><%= item.product.name %></h6>
-                                                <h5>₹<%= item.product.price.toFixed(2) %></h5>
+                                                <!-- Display offer price if available, otherwise show original price -->
+                                                <% if (item.product.offerPrice) { %>
+                                                    <h5>
+                                                        <span > ₹<%= item.product.offerPrice.toFixed(2) %></span>
+                                                    </h5>
+                                                <% } else { %>
+                                                    <h5>₹<%= item.product.price.toFixed(2) %></h5>
+                                                <% } %>
                                             </div>
                                         </td>
                                         <td class="quantity__item">
@@ -88,8 +93,10 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        
-                                        <td class="cart__price" id="total-<%= item.product._id %>">₹<%= (item.quantity * item.product.price).toFixed(2) %></td>
+                                        <!-- Use offerPrice for total if available, else original price -->
+                                        <td class="cart__price" id="total-<%= item.product._id %>">
+                                            ₹<%= (item.quantity * (item.product.offerPrice || item.product.price)).toFixed(2) %>
+                                        </td>
                                         <td class="cart__close">
                                             <button type="button" class="btn" onclick="confirmRemove('<%= item.product._id %>')">
                                                 <i class="fa fa-close"></i>
@@ -102,7 +109,7 @@
                                     <td colspan="4" class="text-center">Your cart is empty</td>
                                 </tr>
                             <% } %>
-                        </tbody>                        
+                        </tbody>                                                                        
                     </table>
                 </div>
                 <div class="row">
@@ -114,18 +121,19 @@
                 </div>
             </div>
             <div class="col-lg-4">
-                <div class="cart__discount">
-                    <h6>Discount codes</h6>
-                    <form action="#">
-                        <input type="text" placeholder="Coupon code">
-                        <button type="submit">Apply</button>
-                    </form>
-                </div>
                 <div class="cart__total">
                     <h6>Cart total</h6>
                     <ul>
-                        <li>Subtotal <span id="subtotal">₹<%= cart.total_price.toFixed(2) %></span></li>
-                        <li>Total <span id="total">₹<%= cart.total_price.toFixed(2) %></span></li>
+                        <li>Subtotal 
+                            <span id="subtotal">
+                                ₹<%=  cart.total_price  %>
+                            </span>
+                        </li>
+                        <li>Total 
+                            <span id="total">
+                                ₹<%=  cart.total_price  %>
+                            </span>
+                        </li>                        
                     </ul>
                     <a href="/checkout" class="primary-btn">Proceed to checkout</a>
                 </div>
@@ -136,6 +144,7 @@
 <!-- Shopping Cart Section End -->
 
 <%- include('footer') %>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
@@ -160,47 +169,48 @@
     }
 
     function updateQuantity(productId, change) {
-    const qtyInput = document.getElementById(`qty-${productId}`);
-    let newQuantity = parseInt(qtyInput.value) + change;
+        const qtyInput = document.getElementById(`qty-${productId}`);
+        let newQuantity = parseInt(qtyInput.value) + change;
 
-    // Ensure new quantity is within the limits
-    if (newQuantity < 1) {
-        newQuantity = 1;
-    }
-    const MAX_QTY_PER_USER = 5;
-    if (newQuantity > MAX_QTY_PER_USER) {
-        newQuantity = MAX_QTY_PER_USER;
-    }
-
-    qtyInput.value = newQuantity;
-
-    fetch(`/update-quantity/${productId}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ quantity: newQuantity }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const price = parseFloat(data.price);
-            const oldTotal = parseFloat(document.getElementById(`total-${productId}`).innerText.replace('₹', ''));
-            const newTotal = newQuantity * price;
-            document.getElementById(`total-${productId}`).innerText = `₹${newTotal.toFixed(2)}`;
-            
-            // Update cart total
-            const subtotal = document.getElementById('subtotal');
-            const currentTotal = parseFloat(subtotal.innerText.replace('₹', ''));
-            const updatedTotal = currentTotal - oldTotal + newTotal;
-            document.getElementById('total').innerText = `₹${updatedTotal.toFixed(2)}`;
-            subtotal.innerText = `₹${updatedTotal.toFixed(2)}`;
-        } else {
-            // Display the error message from the server
-            alert(data.message);
+        // Ensure new quantity is within the limits
+        if (newQuantity < 1) {
+            newQuantity = 1;
         }
-    })
-    .catch(error => console.error('Error:', error));
-}
+        const MAX_QTY_PER_USER = 5;
+        if (newQuantity > MAX_QTY_PER_USER) {
+        newQuantity = MAX_QTY_PER_USER;
+        toastr.warning("Quantity exceeds the maximum limit allowed per user!");
+        }
 
+
+        qtyInput.value = newQuantity;
+
+        fetch(`/update-quantity/${productId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ quantity: newQuantity }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const price = parseFloat(data.price);
+                const oldTotal = parseFloat(document.getElementById(`total-${productId}`).innerText.replace('₹', ''));
+                const newTotal = newQuantity * price;
+                document.getElementById(`total-${productId}`).innerText = `₹${newTotal.toFixed(2)}`;
+                
+                // Update cart total
+                const subtotal = document.getElementById('subtotal');
+                const currentTotal = parseFloat(subtotal.innerText.replace('₹', ''));
+                const updatedTotal = currentTotal - oldTotal + newTotal;
+                document.getElementById('total').innerText = `₹${updatedTotal.toFixed(2)}`;
+                subtotal.innerText = `₹${updatedTotal.toFixed(2)}`;
+            } else {
+                // Display the error message from the server
+                toastr.info(data.message);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
 </script>

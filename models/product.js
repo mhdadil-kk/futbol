@@ -19,18 +19,19 @@ const productSchema = new Schema({
         default: false
     },
     category: {
-        type: String,
-       
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Category',
     },
     stock: {
         type: Number,
         required: true,
     },
     images: [String],
-    status: {
-        type: Boolean,
-        default: false
-    },
+    
+    offers: [{ 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Offer' 
+    }],
 },{
     timestamps :true
 });

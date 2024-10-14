@@ -162,7 +162,7 @@
         <div class="order-card">
             <div class="order-header">
                 <div class="order-id">
-                    Order #<%= order._id ? String(order._id).slice(-5) : 'N/A' %>
+                    Order #<%= order._id ? String(order._id).slice(-5).toUpperCase() : 'N/A' %>
                 </div>
                 <div class="order-date">
                     <i class="fas fa-calendar-alt"></i> <%= order.orderDate ? new Date(order.orderDate).toISOString().split('T')[0] : 'N/A' %>

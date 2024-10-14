@@ -38,7 +38,7 @@ app.use((req, res, next) => {
         res.locals.username = null; 
     }
 
-    console.log('Username:', res.locals.username); // Debugging output to verify the username
+   
     next();
 });
 
@@ -81,7 +81,7 @@ app.use((req, res, next) => {
 // Handle other errors
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).send('Something broke!');
+    res.status(500).render('admin/404', { pageTitle: 'Page Not Found' });
 });
 
 // Server

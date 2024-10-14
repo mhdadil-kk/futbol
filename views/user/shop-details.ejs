@@ -1,25 +1,12 @@
 <%- include('header') %>
+    <!-- Include Toastr CSS and JS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet"/>
 
     <!-- Shop Details Section Begin -->
     <style>
         .product__thumb__pic {
             margin-bottom: 20px;
             /* Space between each thumbnail */
-        }
-
-        .product__details__pic .col-lg-3,
-        .product__details__pic .col-md-3 {
-            padding-right: 20px;
-            /* Space between the thumbnails and the main image */
-        }
-
-        .product__details__pic__item img {
-            border: 1px solid #ddd;
-            /* Add border around the main image */
-            padding: 10px;
-            /* Add padding inside the main image container */
-            max-width: 100%;
-            /* Ensure the image does not exceed container width */
         }
 
         .product__details__text {
@@ -29,20 +16,26 @@
             background-color: #f9f9f9;
         }
 
-        .discounted-price {
+        .offer-price {
             font-size: 24px;
             font-weight: bold;
-            color: #333;
+            color: #d9534f;
+            /* Bootstrap's danger color for visibility */
         }
 
         .original-price {
             font-size: 16px;
             color: #888;
             text-decoration: line-through;
-            display: inline-block;
             margin-left: 10px;
         }
 
+        .discount-percentage {
+            font-size: 14px;
+            color: #d9534f;
+            /* Same color as offer price for consistency */
+            margin-left: 10px;
+        }
 
         .product__details__cart__option {
             margin-top: 20px;
@@ -56,11 +49,6 @@
 
         .product__details__last__option ul li {
             margin-bottom: 10px;
-        }
-
-        .related .product__item {
-            margin-bottom: 30px;
-            /* Space between related products */
         }
     </style>
 
@@ -120,61 +108,32 @@
                                 <%= product.name %>
                             </h4>
 
-                            <!-- Calculate the discount and display the prices -->
-                            <% const discount=100; %>
-                                <% const originalPrice=product.price + discount; %>
-                                    <% const discountedPrice=originalPrice - discount; %>
-
-                                        <h3 class="discounted-price">₹<%= discountedPrice %>
-                                        </h3>
-                                        <h5 class="original-price">₹<%= originalPrice %>
-                                        </h5>
+                            <!-- Display Original Price and Offer Price -->
+                            <% if (product.offerPrice !==null) { %>
+                                <h3 class="offer-price">₹<%= product.offerPrice.toFixed(2) %>
+                                </h3>
+                                <h5 class="original-price">₹<%= product.price.toFixed(2) %>
+                                </h5>
+                                <span class="discount-percentage">(<%= product.discountPercentage.toFixed(0) %>%
+                                        OFF)</span>
+                                <% } else { %>
+                                    <h3 class="offer-price">₹<%= product.price.toFixed(2) %>
+                                    </h3>
+                                    <% } %>
 
                                         <p>
                                             <%= product.description %>
                                         </p>
 
-                                        <div class="product__details__option">
-                                            <div class="product__details__option__size">
-                                                <span>Size:</span>
-                                                <!-- Dummy Sizes -->
-                                                <label for="size-s">S
-                                                    <input type="radio" id="size-s" name="size">
-                                                </label>
-                                                <label for="size-m">M
-                                                    <input type="radio" id="size-m" name="size">
-                                                </label>
-                                                <label for="size-l">L
-                                                    <input type="radio" id="size-l" name="size">
-                                                </label>
-                                                <label for="size-xl">XL
-                                                    <input type="radio" id="size-xl" name="size">
-                                                </label>
-                                            </div>
-                                            <!-- Dummy Rating -->
-                                            <div class="rating">
-                                                <i class="fa fa-star"></i>
-                                                <i class="fa fa-star"></i>
-                                                <i class="fa fa-star"></i>
-                                                <i class="fa fa-star"></i>
-                                                <i class="fa fa-star-o"></i>
-                                                <span> - 5 Reviews</span>
-                                            </div>
-                                        </div>
 
                                         <div class="product__details__cart__option">
-                                            <div class="quantity">
-                                                <div class="pro-qty">
-                                                    <input type="text" value="1">
-                                                </div>
-                                            </div>
                                             <a href="#" id="add-to-cart-btn" class="primary-btn">Add to Cart</a>
                                         </div>
 
                                         <div class="product__details__last__option">
                                             <ul>
                                                 <li><span>Category:</span>
-                                                    <%= product.category %>
+                                                    <%= product.category.name %>
                                                 </li>
                                                 <li><span>Stock:</span>
                                                     <% if (product.stock===0) { %>
@@ -189,7 +148,6 @@
                                         </div>
                         </div>
                     </div>
-
                 </div>
             </div>
     </section>
@@ -219,7 +177,7 @@
                                 <h6>
                                     <%= Product.name %>
                                 </h6>
-                                <h5>₹<%= Product.price %>
+                                <h5>₹<%= Product.price.toFixed(2) %>
                                 </h5>
                             </div>
                         </div>
@@ -229,13 +187,17 @@
         </div>
     </section>
     <!-- Related Section End -->
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <%- include('footer') %>
 
         <script>
+ 
             $(document).ready(function () {
+
                 $('.imgzoom').elevateZoom({
                     zoomType: "lens",
                     lensShape: "square",
@@ -247,13 +209,28 @@
                     lensFadeIn: 200,
                     lensFadeOut: 200
                 });
-            });
+
+            toastr.options = {
+        "closeButton": true,
+        "debug": false,
+        "newestOnTop": false,
+        "progressBar": true,
+        "positionClass": "toast-top-right",
+        "preventDuplicates": false,
+        "onclick": null,
+        "showDuration": "300",
+        "hideDuration": "1000",
+        "timeOut": "5000",
+        "extendedTimeOut": "1000",
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+    };
 
             document.getElementById('add-to-cart-btn').addEventListener('click', function (event) {
-                event.preventDefault(); // Prevent the default anchor action
-
                 const productId = '<%= product._id %>'; // Ensure this is correctly set
-                const quantity = document.querySelector('.pro-qty input').value || 1;
+                const quantity = 1;
 
                 fetch('/add-to-cart', {
                     method: 'POST',
@@ -283,7 +260,7 @@
                             });
                         } else {
                             // Check if the failure is due to user not being logged in
-                            if (data.message === 'User not logged in') {
+                            if (data.message == 'User not logged in') {
                                 Swal.fire({
                                     title: 'Not Logged In',
                                     text: "You need to log in to add products to your cart.",
@@ -296,6 +273,10 @@
                                         window.location.href = '/login'; // Redirect to login page
                                     }
                                 });
+                            } else if (data.message == 'Product Out of stock') {
+                                // Show an Out of Stock message using Toastr
+                                console.log(toastr)
+                                toastr.warning('This product is currently out of stock.');
                             } else {
                                 Swal.fire('Error', 'Failed to add the product to the cart. Please try again.', 'error');
                             }
@@ -303,5 +284,6 @@
                     })
                     .catch(error => console.error('Error:', error));
             });
+        });
 
         </script>

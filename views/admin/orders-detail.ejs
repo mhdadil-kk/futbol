@@ -4,7 +4,7 @@
     <div class="content-header">
         <div>
             <h2 class="content-title card-title">Order detail</h2>
-            <p>Details for Order ID: <%= order._id %></p>
+            <p>Details for Order ID: #<%= order._id.toString().slice(-5).toUpperCase() %></p>
         </div>
     </div>
     
@@ -17,7 +17,7 @@
                         <b><%= new Date(order.orderDate).toLocaleString() %></b>
                     </span>
                     <br />
-                    <small class="text-muted">Order ID: <%= order._id %></small>
+                    <small class="text-muted">Order ID: #<%= order._id.toString().slice(-5).toUpperCase() %> </small>
                 </div>
                 <div class="col-lg-6 col-md-6 ms-auto text-md-end">
                     <form id="updateOrderForm" action="/admin/update-order/<%= order._id %>" method="POST">

@@ -5,22 +5,21 @@
             <h2 class="content-title card-title">Categories</h2>
             <p>Add, edit or delete a category</p>
         </div>
-        <div>
-            <input type="text" placeholder="Search Categories" class="form-control bg-white" />
-        </div>
     </div>
     <div class="card">
         <div class="card-body">
             <div class="row">
                 <div class="col-md-3">
-                    <form method="post">
+                    <form method="post" id="categoryForm" onsubmit="return validateForm()">
                         <div class="mb-4">
                             <label for="category_name" class="form-label">Name</label>
-                            <input type="text" placeholder="Type here" class="form-control" name="name" />
+                            <input type="text" placeholder="Type here" class="form-control" name="name" id="category_name" />
+                            <div id="nameError" style="color: red; display: none;"></div>
                         </div>
                         <div class="mb-4">
                             <label class="form-label">Description</label>
-                            <textarea placeholder="Type here" class="form-control" name="description"></textarea>
+                            <textarea placeholder="Type here" class="form-control" name="description" id="description"></textarea>
+                            <div id="descriptionError" style="color: red; display: none;"></div>
                         </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary">Create category</button>
@@ -85,6 +84,103 @@
 </section>
 
 <script>
+function validateForm() {
+    const name = document.getElementById('category_name').value;
+    const description = document.getElementById('description').value;
+    const nameError = document.getElementById('nameError');
+    const descriptionError = document.getElementById('descriptionError');
+
+    // Reset previous error messages
+    nameError.style.display = 'none';
+    descriptionError.style.display = 'none';
+
+    // Regular expression to check for special characters
+    const specialCharPattern = /[!@#$%^&*(),.?":{}|<>+=-]/;
+    // Regular expression to check for multiple spaces
+    const multipleSpacesPattern = /\s{2,}/;
+
+    // Validate category name
+    if (name === '') {
+        nameError.textContent = 'Please enter a category name. This field cannot be empty.';
+        nameError.style.display = 'block';
+        return false;
+    }
+    if (name.trim() === '') { // Check for leading/trailing spaces
+        nameError.textContent = 'The category name cannot be empty or consist only of spaces.';
+        nameError.style.display = 'block';
+        return false;
+    }
+    if (name.startsWith(' ')) {
+        nameError.textContent = 'The category name cannot start with a space. Please remove any leading spaces.';
+        nameError.style.display = 'block';
+        return false;
+    }
+    if (name.endsWith(' ')) {
+        nameError.textContent = 'The category name cannot end with a space. Please remove any trailing spaces.';
+        nameError.style.display = 'block';
+        return false;
+    }
+    if (multipleSpacesPattern.test(name)) {
+        nameError.textContent = 'The category name cannot contain consecutive spaces. Please correct this.';
+        nameError.style.display = 'block';
+        return false;
+    }
+    if (name.length < 3) {
+        nameError.textContent = 'The category name must be at least 3 characters long. Please provide a longer name.';
+        nameError.style.display = 'block';
+        return false;
+    }
+    if (name.length > 50) {
+        nameError.textContent = 'The category name cannot exceed 50 characters. Please shorten the name.';
+        nameError.style.display = 'block';
+        return false;
+    }
+    if (specialCharPattern.test(name)) {
+        nameError.textContent = 'The category name cannot contain special characters (e.g., !@#$%^&*). Please use only letters and numbers.';
+        nameError.style.display = 'block';
+        return false;
+    }
+
+    // Validate description
+    if (description === '') {
+        descriptionError.textContent = 'Please enter a description. This field cannot be empty.';
+        descriptionError.style.display = 'block';
+        return false;
+    }
+    
+    if (description.startsWith(' ')) {
+        descriptionError.textContent = 'The description cannot start with a space. Please remove any leading spaces.';
+        descriptionError.style.display = 'block';
+        return false;
+    }
+    if (description.endsWith(' ')) {
+        descriptionError.textContent = 'The description cannot end with a space. Please remove any trailing spaces.';
+        descriptionError.style.display = 'block';
+        return false;
+    }
+    if (multipleSpacesPattern.test(description)) {
+        descriptionError.textContent = 'The description cannot contain consecutive spaces. Please correct this.';
+        descriptionError.style.display = 'block';
+        return false;
+    }
+    if (description.length < 10) {
+        descriptionError.textContent = 'The description must be at least 10 characters long. Please provide more detail.';
+        descriptionError.style.display = 'block';
+        return false;
+    }
+    if (description.length > 200) {
+        descriptionError.textContent = 'The description cannot exceed 200 characters. Please shorten your description.';
+        descriptionError.style.display = 'block';
+        return false;
+    }
+    if (specialCharPattern.test(description)) {
+        descriptionError.textContent = 'The description cannot contain special characters (e.g., !@#$%^&*). Please use only letters and numbers.';
+        descriptionError.style.display = 'block';
+        return false;
+    }
+
+    return true; // Form is valid
+}
 function activeOrInactive(categoryId) {
     Swal.fire({
         title: "Do you want to save the changes?",
@@ -131,6 +227,7 @@ function activeOrInactive(categoryId) {
         }
     });
 }
+
 </script>
 
 <%- include('adfooter') %>

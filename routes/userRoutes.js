@@ -4,10 +4,13 @@ const userController = require('../controllers/userController');
 const passportController = require('../controllers/passportController');
 const cartController = require('../controllers/cartController')
 const orderController = require('../controllers/orderController')
+const wishlistController = require('../controllers/wishlistController')
+const couponController = require('../controllers/couponController')
 
 const passport = require('passport'); 
 const { ensureAuthenticated } = require('../middlewares/auth');
 const { validateRegister,validateLogin } = require('../middlewares/validation');
+const { generateInvoice } = require('../controllers/invoice_controller');
 require('../passport');
 
 // Define your user routes here
@@ -19,6 +22,16 @@ router.get('/login', userController.loadLogin);
 router.post('/login',validateLogin, userController.verifyLogin);
 router.get('/', userController.loadHome);
 router.get('/auth/google', passport.authenticate('google', { scope: ['email', 'profile'] }));
+
+router.get('/forgot-password', (req, res) => {
+    res.render('user/forgotPassword', { error: null, success: null });
+});
+
+router.post('/forgot-password', userController.forgotPassword);
+router.get('/reset-password/:token', userController.loadResetPassword);
+router.post('/reset-password', userController.resetPassword);
+
+
 
 
 
@@ -34,21 +47,37 @@ router.get('/failure', passportController.failureGoogleLogin);
 router.get('/profile', ensureAuthenticated,userController.loadProfile);
 router.post('/update-profile', userController.updateProfile);
 router.get('/shop',userController.loadShop)
-router.get('/product/:id',userController.loadProductDetails);
-router.post('/add_address' ,userController.addAddress)
-router.post('/updateAddress/:id',userController.updateAddress)
-router.get('/delete_address/:id',userController.deleteAddress)
-router.get('/cart',cartController.loadCart)
-router.post('/add-to-cart',cartController.addToCart)
-router.post('/remove/:productId',cartController.removeProduct)
-router.post('/update-quantity/:productId',cartController.updateCart)
+router.get('/api/products', userController.loadAdvancedSearch);
+router.get('/api/products/search',userController.search)
+router.get('/api/products/category',userController.filterByCategory)
 
-router.get('/checkout',cartController.loadcheckout)
-router.post('/place-order',orderController.placeOrder)
-router.get('/orders',orderController.loadOrderList)
-router.get('/order-details/:orderId',orderController.loadOrderDetails)
-router.post('/order/cancel/:orderId',orderController.cancelOrder)
+router.get('/product/:id',userController.loadProductDetails);
+router.post('/add_address' ,ensureAuthenticated,userController.addAddress)
+router.post('/updateAddress/:id',ensureAuthenticated,userController.updateAddress)
+router.post('/delete_address',ensureAuthenticated,userController.deleteAddress)
+router.get('/cart',ensureAuthenticated,cartController.loadCart)
+router.post('/add-to-cart',cartController.addToCart)
+router.post('/remove/:productId',ensureAuthenticated,cartController.removeProduct)
+router.post('/update-quantity/:productId',ensureAuthenticated,cartController.updateCart)
+
+router.get('/wishlist',ensureAuthenticated,wishlistController.loadWishlist)
+router.post('/wishlist/add/:productId',ensureAuthenticated,wishlistController.addToWishlist)
+router.post('/wishlist/remove/:productId',ensureAuthenticated,wishlistController.removeFromWishlist)
+
+router.get('/checkout',ensureAuthenticated,cartController.loadcheckout)
+router.post('/apply-coupon',couponController.applyCoupon)
+
+
+
+router.post('/place-order',ensureAuthenticated,orderController.placeOrder)
+router.post('/confirm-payment',orderController.confirmPayment)
+router.post('/continue-payment',orderController.continuePayment)
+router.get('/orders',ensureAuthenticated,orderController.loadOrderList)
+router.post('/downloadInvoice',generateInvoice)
+router.get('/order-details/:orderId',ensureAuthenticated,orderController.loadOrderDetails)
+router.post('/order/cancel/:orderId',ensureAuthenticated,orderController.cancelOrder)
 router.get('/logout',userController.logout);
+
 
 
 module.exports = router;
