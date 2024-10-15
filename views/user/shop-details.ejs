@@ -229,6 +229,7 @@
     };
 
             document.getElementById('add-to-cart-btn').addEventListener('click', function (event) {
+                event?.preventDefault()
                 const productId = '<%= product._id %>'; // Ensure this is correctly set
                 const quantity = 1;
 
