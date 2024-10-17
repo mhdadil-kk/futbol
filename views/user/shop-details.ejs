@@ -91,7 +91,7 @@
                                         <div class="tab-pane <%= index === 0 ? 'active' : '' %>"
                                             id="tabs-<%= index + 1 %>" role="tabpanel">
                                             <div class="product__details__pic__item">
-                                                <img src="/uploads/<%= image %>" alt="Product Image <%= index + 1 %>"
+                                                <img onmouseover="imagezoom()" src="/uploads/<%= image %>" alt="Product Image <%= index + 1 %>"
                                                     class="imgzoom">
                                             </div>
                                         </div>
@@ -196,9 +196,8 @@
 
         <script>
 
-            $(document).ready(function () {
-
-                $('.imgzoom').elevateZoom({
+     function imagezoom(){
+        $('.imgzoom').elevateZoom({
                     zoomType: "lens",
                     lensShape: "square",
                     lensSize: 200,
@@ -209,7 +208,11 @@
                     lensFadeIn: 200,
                     lensFadeOut: 200
                 });
+     }
 
+            $(document).ready(function () {
+
+         
                 toastr.options = {
                     "closeButton": true,
                     "debug": false,
@@ -233,9 +236,7 @@
 
             function Addtocart(productId) {
                     event.preventDefault();
-                    // const productId = '<%= product._id %>'; // Ensure this is correctly set
                     const quantity = 1;
-       console.log(productId)
                     fetch('/add-to-cart', {
                         method: 'POST',
                         headers: {
@@ -279,7 +280,7 @@
                                     });
                                 } else if (data.message == 'Product Out of stock') {
                                     // Show an Out of Stock message using Toastr
-                                    console.log(toastr)
+                               
                                     toastr.warning('This product is currently out of stock.');
                                 } else {
                                     Swal.fire('Error', 'Failed to add the product to the cart. Please try again.', 'error');
