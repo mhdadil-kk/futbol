@@ -1,6 +1,6 @@
 <%- include('header') %>
     <!-- Include Toastr CSS and JS -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
 
     <!-- Shop Details Section Begin -->
     <style>
@@ -127,7 +127,7 @@
 
 
                                         <div class="product__details__cart__option">
-                                            <a href="#" id="add-to-cart-btn" class="primary-btn">Add to Cart</a>
+                                            <button id="add-to-cart-btn" class="primary-btn">Add to Cart</button>
                                         </div>
 
                                         <div class="product__details__last__option">
@@ -169,8 +169,8 @@
                                 <a href="/product/<%= Product._id %>"><img src="/uploads/<%= Product.images[0] %>"
                                         alt=""></a>
                                 <ul class="product__hover">
-                                    <li><a href="#"><img src="img/icon/heart.png" alt=""></a></li>
-                                    <li><a href="#"><img src="img/icon/search.png" alt=""></a></li>
+                                    <li><a href="#"><img src="/img/icon/heart.png" alt=""></a></li>
+                                    <li><a href="#"><img src="/img/icon/search.png" alt=""></a></li>
                                 </ul>
                             </div>
                             <div class="product__item__text">
@@ -189,13 +189,13 @@
     <!-- Related Section End -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <%- include('footer') %>
 
         <script>
- 
+
             $(document).ready(function () {
 
                 $('.imgzoom').elevateZoom({
@@ -210,81 +210,81 @@
                     lensFadeOut: 200
                 });
 
-            toastr.options = {
-        "closeButton": true,
-        "debug": false,
-        "newestOnTop": false,
-        "progressBar": true,
-        "positionClass": "toast-top-right",
-        "preventDuplicates": false,
-        "onclick": null,
-        "showDuration": "300",
-        "hideDuration": "1000",
-        "timeOut": "5000",
-        "extendedTimeOut": "1000",
-        "showEasing": "swing",
-        "hideEasing": "linear",
-        "showMethod": "fadeIn",
-        "hideMethod": "fadeOut"
-    };
+                toastr.options = {
+                    "closeButton": true,
+                    "debug": false,
+                    "newestOnTop": false,
+                    "progressBar": true,
+                    "positionClass": "toast-top-right",
+                    "preventDuplicates": false,
+                    "onclick": null,
+                    "showDuration": "300",
+                    "hideDuration": "1000",
+                    "timeOut": "5000",
+                    "extendedTimeOut": "1000",
+                    "showEasing": "swing",
+                    "hideEasing": "linear",
+                    "showMethod": "fadeIn",
+                    "hideMethod": "fadeOut"
+                };
 
-            document.getElementById('add-to-cart-btn').addEventListener('click', function (event) {
-                event?.preventDefault()
-                const productId = '<%= product._id %>'; // Ensure this is correctly set
-                const quantity = 1;
+                document.getElementById('add-to-cart-btn').addEventListener('click', function (event) {
+                    event.preventDefault();
+                    const productId = '<%= product._id %>'; // Ensure this is correctly set
+                    const quantity = 1;
 
-                fetch('/add-to-cart', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        productId: productId,
-                        quantity: quantity
+                    fetch('/add-to-cart', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            productId: productId,
+                            quantity: quantity
+                        })
                     })
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Product added to cart, show success SweetAlert
-                            Swal.fire({
-                                title: 'Product Added to Cart!',
-                                text: "Do you want to view your cart or continue shopping?",
-                                icon: 'success',
-                                showCancelButton: true,
-                                confirmButtonText: 'Go to Cart',
-                                cancelButtonText: 'Continue Shopping'
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    window.location.href = '/cart'; // Redirect to cart page
-                                }
-                            });
-                        } else {
-                            // Check if the failure is due to user not being logged in
-                            if (data.message == 'User not logged in') {
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Product added to cart, show success SweetAlert
                                 Swal.fire({
-                                    title: 'Not Logged In',
-                                    text: "You need to log in to add products to your cart.",
-                                    icon: 'warning',
+                                    title: 'Product Added to Cart!',
+                                    text: "Do you want to view your cart or continue shopping?",
+                                    icon: 'success',
                                     showCancelButton: true,
-                                    confirmButtonText: 'Log In',
-                                    cancelButtonText: 'Cancel'
+                                    confirmButtonText: 'Go to Cart',
+                                    cancelButtonText: 'Continue Shopping'
                                 }).then((result) => {
                                     if (result.isConfirmed) {
-                                        window.location.href = '/login'; // Redirect to login page
+                                        window.location.href = '/cart'; // Redirect to cart page
                                     }
                                 });
-                            } else if (data.message == 'Product Out of stock') {
-                                // Show an Out of Stock message using Toastr
-                                console.log(toastr)
-                                toastr.warning('This product is currently out of stock.');
                             } else {
-                                Swal.fire('Error', 'Failed to add the product to the cart. Please try again.', 'error');
+                                // Check if the failure is due to user not being logged in
+                                if (data.message == 'User not logged in') {
+                                    Swal.fire({
+                                        title: 'Not Logged In',
+                                        text: "You need to log in to add products to your cart.",
+                                        icon: 'warning',
+                                        showCancelButton: true,
+                                        confirmButtonText: 'Log In',
+                                        cancelButtonText: 'Cancel'
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            window.location.href = '/login'; // Redirect to login page
+                                        }
+                                    });
+                                } else if (data.message == 'Product Out of stock') {
+                                    // Show an Out of Stock message using Toastr
+                                    console.log(toastr)
+                                    toastr.warning('This product is currently out of stock.');
+                                } else {
+                                    Swal.fire('Error', 'Failed to add the product to the cart. Please try again.', 'error');
+                                }
                             }
-                        }
-                    })
-                    .catch(error => console.error('Error:', error));
+                        })
+                        .catch(error => console.error('Error:', error));
+                });
             });
-        });
 
         </script>
