@@ -127,7 +127,7 @@
 
 
                                         <div class="product__details__cart__option">
-                                            <button id="add-to-cart-btn" class="primary-btn">Add to Cart</button>
+                                            <button id="add-to-cart-btn"   onclick="Addtocart('<%= product._id %>')" class="primary-btn">Add to Cart</button>
                                         </div>
 
                                         <div class="product__details__last__option">
@@ -228,11 +228,14 @@
                     "hideMethod": "fadeOut"
                 };
 
-                document.getElementById('add-to-cart-btn').addEventListener('click', function (event) {
-                    event.preventDefault();
-                    const productId = '<%= product._id %>'; // Ensure this is correctly set
-                    const quantity = 1;
+                
+            });
 
+            function Addtocart(productId) {
+                    event.preventDefault();
+                    // const productId = '<%= product._id %>'; // Ensure this is correctly set
+                    const quantity = 1;
+       console.log(productId)
                     fetch('/add-to-cart', {
                         method: 'POST',
                         headers: {
@@ -284,7 +287,6 @@
                             }
                         })
                         .catch(error => console.error('Error:', error));
-                });
-            });
+                };
 
         </script>
