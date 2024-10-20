@@ -53,8 +53,8 @@
                                     <strong>
                                         <%= item.product.name || 'Product Name' %>
                                     </strong><br>
-                                    ₹<%= (item.product.price || 0).toFixed(2) %> x <%= item.quantity || 1 %> = ₹<%=
-                                                ((item.quantity || 1) * (item.product.price || 0)).toFixed(2) %>
+                                    ₹<%= (item.price || 0).toFixed(2) %> x <%= item.quantity || 1 %> = ₹<%=
+                                                ((item.quantity || 1) * (item.price || 0)).toFixed(2) %>
                                 </div>
                             </li>
                             <% }) %>
@@ -122,37 +122,71 @@
                     <h5>Actions</h5>
                 </div>
                 <div class="card-body">
-                    <a href="#" onclick="confirmCancellation('<%= order._id %>'); return false;"
-                        class="btn btn-danger">Cancel Order</a>
+                    <!-- Cancel Order Button -->
+                    <a href="#" onclick="confirmCancellation('<%= order._id %>'); return false;" class="btn btn-danger">
+                        Cancel Order
+                    </a>
                 </div>
             </div>
             <% } %>
 
                 <!-- Cancellation Reason Modal -->
                 <div class="modal fade" id="cancelOrderModal" tabindex="-1" role="dialog"
-                    aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="cancelOrderModalLabel">Cancel Order</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    aria-labelledby="cancelOrderModalLabel" aria-hidden="true"
+                    style="color: #333; font-family: Arial, sans-serif;">
+                    <div class="modal-dialog" role="document" style="max-width: 600px;">
+                        <div class="modal-content"
+                            style="border-radius: 8px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);">
+                            <div class="modal-header"
+                                style="background-color: #f8f9fa; border-bottom: 2px solid #dc3545; padding: 15px;">
+                                <h5 class="modal-title" id="cancelOrderModalLabel" style="font-weight: bold;">Cancel
+                                    Order</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+                                    style="font-size: 24px; opacity: 0.8;">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
                             </div>
-                            <div class="modal-body">
-                                <label for="cancellationReason">Reason for Cancellation:</label>
-                                <textarea id="cancellationReason" class="form-control" rows="3"></textarea>
+                            <div class="modal-body border"
+                                style="padding: 20px; border: 1px solid #dc3545; background-color: #fff; border-radius: 0 0 8px 8px;">
+                                <!-- Cancellation Reason -->
+                                <label for="cancellationReason" style="font-weight: bold; font-size: 14px;">Reason for
+                                    Cancellation:</label>
+                                <textarea id="cancellationReason" class="form-control" rows="3"
+                                    style="resize: none; border-radius: 4px; border: 1px solid #ddd; padding: 10px;"></textarea>
+
+                                <!-- Product Selection -->
+                                <h5 class="mt-4" style="color: #dc3545;">Select Products to Cancel</h5>
+                                <form id="cancelProductsForm">
+                                    <% order.products.forEach((item, index)=> { %>
+                                        <div class="form-check" style="margin-bottom: 10px;">
+                                            <input class="form-check-input" type="checkbox"
+                                                value="<%= item.product._id %>" id="cancelProductCheck<%= index %>"
+                                                name="selectedCancelProducts" style="margin-top: 0.5rem;">
+                                            <label class="form-check-label" for="cancelProductCheck<%= index %>"
+                                                style="margin-left: 8px;">
+                                                <%= item.product.name %> - ₹<%= item.price %> (Quantity: <%=
+                                                            item.quantity %>)
+                                            </label>
+                                        </div>
+                                        <% }); %>
+                                </form>
                             </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                <button type="button" class="btn btn-danger" id="confirmCancellationBtn">Confirm
-                                    Cancellation</button>
+                            <div class="modal-footer"
+                                style="border-top: none; padding: 15px 20px; background-color: #f8f9fa;">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                                    style="background-color: #6c757d; color: white; border-radius: 4px;">Close</button>
+                                <button type="button" class="btn btn-danger" id="confirmCancellationBtn"
+                                    onclick="submitCancelRequest()"
+                                    style="background-color: #dc3545; color: #fff; border-radius: 4px;">
+                                    Confirm Cancellation
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-             <% if (order.status==='Delivered' ) { %>
+
+                <% if (order.status==='Delivered' ) { %>
                     <!-- Return Button -->
                     <div class="card mb-4">
                         <div class="card-body text-center">
@@ -160,10 +194,9 @@
                                 data-target="#returnOrderModal">Return Order</button>
                         </div>
                     </div>
-              <% } %>
-     </div>
+                    <% } %>
+    </div>
 
-    <!-- Return Order Modal -->
     <!-- Return Order Modal -->
     <div class="modal fade" id="returnOrderModal" tabindex="-1" role="dialog" aria-labelledby="returnOrderModalLabel"
         aria-hidden="true" style="color: #333; font-family: Arial, sans-serif;">
@@ -193,7 +226,7 @@
                                     id="productCheck<%= index %>" name="selectedProducts" style="margin-top: 0.5rem;">
                                 <label class="form-check-label" for="productCheck<%= index %>"
                                     style="margin-left: 8px;">
-                                    <%= item.product.name %> - ₹<%= item.product.price %> (Quantity:
+                                    <%= item.product.name %> - ₹<%= item.price %> (Quantity:
                                             <%= item.quantity %>)
                                 </label>
                             </div>
@@ -328,49 +361,65 @@
         }
 
 
+        let currentOrderId = '';
+
+        // Function to show the modal and pass order ID
         function confirmCancellation(orderId) {
-            $('#cancelOrderModal').modal('show');
+            currentOrderId = orderId;  // Store the order ID for later use
+            $('#cancelOrderModal').modal('show');  // Show the modal
 
-            // Attach event listener for the confirmation button click
-            document.getElementById('confirmCancellationBtn').addEventListener('click', function () {
-                const reason = document.getElementById('cancellationReason').value;
-
-                // Ensure a reason is provided for the cancellation
-                if (!reason) {
-                    Swal.fire('Error', 'Please provide a cancellation reason.', 'error');
-                    return;
-                }
-
-                // Send the cancellation request to the server
-                fetch(`/order/cancel/${orderId}`, {
-                    method: 'POST', // Assuming you're using POST for the cancellation
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ reason }) // Only send the reason in the body
-                })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.message === 'Order not found') {
-                            Swal.fire('Error', 'The order was not found.', 'error');
-                        } else if (data.message === 'Order is already cancelled') {
-                            Swal.fire('Error', 'The order is already cancelled.', 'error');
-                        } else if (data.message === 'Order cancelled and refund processed') {
-                            // Successful cancellation
-                            $('#cancelOrderModal').modal('hide');
-                            Swal.fire('Success', 'Order cancelled and refund processed!', 'success').then(() => {
-                                window.location.reload();
-                            });
-                        } else {
-                            Swal.fire('Error', 'Cancellation failed!', 'error');
-                        }
-                    })
-                    .catch(err => {
-                        console.error('Error during cancellation:', err);
-                        Swal.fire('Error', 'An error occurred while cancelling the order.', 'error');
-                    });
+            // Reset any previous selections or input
+            document.getElementById('cancellationReason').value = '';
+            document.querySelectorAll('input[name="selectedCancelProducts"]').forEach(checkbox => {
+                checkbox.checked = false;
             });
         }
 
+        // Function to submit the cancellation request
+        async function submitCancelRequest() {
+            const orderId = currentOrderId;  // Use the stored order ID
+            const cancellationReason = document.getElementById('cancellationReason').value;
+            const selectedProducts = Array.from(document.querySelectorAll('input[name="selectedCancelProducts"]:checked')).map(el => el.value);
 
+            // Ensure reason and at least one product is selected
+            if (!cancellationReason || selectedProducts.length === 0) {
+                Swal.fire('Error', 'Please provide a cancellation reason and select at least one product to cancel.', 'error');
+                return;
+            }
+
+            try {
+                // Submit cancellation via API
+                const response = await fetch(`/order/cancel/${orderId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cancellationReason, selectedProducts })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Cancellation Submitted!',
+                        text: 'Your cancellation request has been successfully submitted.',
+                        confirmButtonText: 'OK'
+                    }).then(result => {
+                        if (result.isConfirmed) {
+                            window.location.reload();  // Reload the page
+                        }
+                    });
+                } else {
+                    throw new Error(data.message || 'Error submitting cancellation request');
+                }
+            } catch (error) {
+                console.error("Cancellation request failed:", error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: error.message || 'There was a problem submitting your cancellation request.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+        }
 
 
         async function submitReturnRequest(orderId) {
@@ -416,21 +465,29 @@
         }
 
         function downloadInvoice(orderId) {
-            fetch('/downloadInvoice', {
+            console.log('Requesting invoice for order ID:', orderId);
+
+            fetch('/downloadInvoice', { // Ensure the correct endpoint is used
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ orderId }),
             })
                 .then(response => {
+                    console.log('Fetch response status:', response.status);
+
                     if (!response.ok) {
+                        console.error('Failed to download invoice. Status:', response.status);
                         throw new Error('Failed to download the invoice');
                     }
-                    // Check for the correct content type (optional but safer)
-                    if (response.headers.get('Content-Type') !== 'application/pdf') {
+
+                    const contentType = response.headers.get('Content-Type');
+                    if (contentType !== 'application/pdf') {
+                        console.error('Invalid content type:', contentType);
                         throw new Error('Invalid content type');
                     }
+
                     return response.blob();
                 })
                 .then(blob => {
@@ -442,12 +499,15 @@
                     a.click();
                     document.body.removeChild(a);
                     window.URL.revokeObjectURL(url);
+
+                    console.log('Invoice successfully downloaded.');
                 })
                 .catch(error => {
-                    console.error('Error:', error);
+                    console.error('Error during invoice download:', error);
                     alert('Failed to download the invoice: ' + error.message);
                 });
         }
+
 
     </script>
 

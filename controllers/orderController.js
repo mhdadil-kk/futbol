@@ -1,10 +1,11 @@
 const Cart = require("../models/cart")
-const Order = require('../models/order'); 
+const Order = require('../models/order');
 const Razorpay = require('razorpay');
 const User = require("../models/user");
 const Wallet = require("../models/wallet");
 const Offer = require('../models/offer')
-const crypto = require('crypto'); 
+const Product = require('../models/product')
+const crypto = require('crypto');
 
 const razorpayInstance = new Razorpay({
     key_id: process.env.KEY_ID,
@@ -14,8 +15,8 @@ const razorpayInstance = new Razorpay({
 
 const loadOrderList = async (req, res) => {
     try {
-        const userId = req.session.user_id  ? req.session.user_id : null;// Use optional chaining to avoid errors if user is undefined
-        
+        const userId = req.session.user_id ? req.session.user_id : null;// Use optional chaining to avoid errors if user is undefined
+
         if (!userId) {
             console.error('User ID is not defined');
             return res.status(400).send('User not authenticated');
@@ -67,60 +68,80 @@ const loadOrderDetails = async (req, res) => {
 
 const cancelOrder = async (req, res) => {
     const { orderId } = req.params;
+    const { selectedProducts, cancellationReason } = req.body;
 
     try {
         const order = await Order.findById(orderId).populate('products.product');
 
         if (!order) {
-            return res.status(404).json({ message: 'Order not found' });
+            return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
         if (order.status === 'Cancelled') {
-            return res.status(400).json({ message: 'Order is already cancelled' });
+            return res.status(400).json({ success: false, message: 'Order is already cancelled' });
         }
 
-        order.status = 'Cancelled';
+        if (!selectedProducts || selectedProducts.length === 0) {
+            return res.status(400).json({ success: false, message: 'No products selected for cancellation' });
+        }
 
-        // Restore stock for each product in the order
-        for (const item of order.products) {
-            const product = item.product; 
-            if (product) {
-                product.stock += item.quantity; 
-                await product.save(); 
+        let refundAmount = 0;
+
+        for (const productId of selectedProducts) {
+            const productIndex = order.products.findIndex(item => item.product._id.toString() === productId);
+
+            if (productIndex === -1) {
+                return res.status(404).json({ success: false, message: `Product with ID ${productId} not found in order` });
             }
+
+            const canceledProduct = order.products[productIndex];
+
+            const product = await Product.findById(canceledProduct.product._id);
+            if (product) {
+                product.stock += canceledProduct.quantity;
+                await product.save();
+            }
+
+            refundAmount += canceledProduct.price * canceledProduct.quantity;
+            order.products.splice(productIndex, 1);
+        }
+
+        order.totalPrice -= refundAmount;
+
+        if (order.products.length === 0) {
+            order.status = 'Cancelled';
         }
 
         const userId = order.user;
         const user = await User.findById(userId);
 
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        // Check if the payment method was 'Wallet' or 'Razorpay'
         if (order.paymentMethod === 'Wallet' || order.paymentMethod === 'Razorpay') {
-            if(order.paymentStatus === "Paid"){ 
-            user.wallet_balance += order.totalPrice;
-            await user.save();
+            if (order.paymentStatus === "Paid") {
+                user.wallet_balance += refundAmount;
+                await user.save();
 
-            // Record wallet transaction for credit
-            const walletTransaction = new Wallet({
-                user: userId,
-                amount: order.totalPrice,
-                payment_type: 'Credit',  
-            });
-            await walletTransaction.save();
+                const walletTransaction = new Wallet({
+                    user: userId,
+                    amount: refundAmount,
+                    payment_type: 'Credit',
+                });
+                await walletTransaction.save();
+            }
         }
-        }
 
-        await order.save();  
+        await order.save();
 
-        res.status(200).json({ message: 'Order cancelled and refund processed' });
+        res.status(200).json({ success: true, message: 'Selected products cancelled and refund processed', refundAmount });
     } catch (error) {
-        console.error('Error cancelling order:', error);
-        res.status(500).json({ message: 'An error occurred while cancelling the order', error: error.message });
+        console.error('Error cancelling products in order:', error);
+        res.status(500).json({ success: false, message: 'An error occurred while cancelling the products', error: error.message });
     }
 };
+
 
 
 const placeOrder = async (req, res) => {
@@ -184,7 +205,7 @@ const placeOrder = async (req, res) => {
         if (req.session.discountedTotal) {
             totalPrice = req.session.discountedTotal;
         }
-        
+
         let couponDiscound = req.session.couponDiscount;
         let offerDiscound = req.session.offerPrice;
         req.session.discountedTotal = null;
@@ -232,7 +253,7 @@ const placeOrder = async (req, res) => {
                 payment_type: 'Debit'
             });
             await walletTransaction.save();
-            savedOrder.status ='Confirmed'
+            savedOrder.status = 'Confirmed'
             savedOrder.paymentStatus = 'Paid';
             await savedOrder.save();
 
@@ -380,8 +401,8 @@ const adOrderLoad = async (req, res) => {
     try {
 
         const orders = await Order.find()
-            .populate('user', 'name email') 
-            .populate('products.product', 'name') 
+            .populate('user', 'name email')
+            .populate('products.product', 'name')
             .populate('deliveryAddress');
         res.render('admin/orderList', { orders });
     } catch (error) {
@@ -396,8 +417,8 @@ const adOrderDetails = async (req, res) => {
         const order = await Order.findById(req.params.id)
             .populate('user')
             .populate({
-                path: 'products.product', 
-                select: 'name images price' 
+                path: 'products.product',
+                select: 'name images price'
             })
             .populate('deliveryAddress')
             .exec();
@@ -416,31 +437,31 @@ const adOrderDetails = async (req, res) => {
 };
 
 
-const updateOrder = async(req,res) =>{
-    try{
+const updateOrder = async (req, res) => {
+    try {
 
-     const orderId = req.params.orderId
-     const {status} = req.body
-    
-     const Updated = await Order.findByIdAndUpdate(orderId,{status},{new:true})
+        const orderId = req.params.orderId
+        const { status } = req.body
 
-     if(Updated){
-        res.redirect(`/admin/orders/${orderId}`);
-     }else{
-        return res.status(404).send('Order not found');
+        const Updated = await Order.findByIdAndUpdate(orderId, { status }, { new: true })
 
-     }
+        if (Updated) {
+            res.redirect(`/admin/orders/${orderId}`);
+        } else {
+            return res.status(404).send('Order not found');
 
-
+        }
 
 
-    }catch(error){
-    console.log(error)
+
+
+    } catch (error) {
+        console.log(error)
     }
 }
 
 
-module.exports ={
+module.exports = {
     loadOrderList,
     loadOrderDetails,
     placeOrder,
