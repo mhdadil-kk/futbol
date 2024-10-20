@@ -1,25 +1,24 @@
 <%- include('adheader') %>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<style>
-    .badge-active {
-    color: white;
-    background-color: green;
-    padding: 5px 10px;
-    border-radius: 25px;
-    text-align: center;
-    display: inline-block;
-}
+    <style>
+        .badge-active {
+            color: white;
+            background-color: green;
+            padding: 5px 10px;
+            border-radius: 25px;
+            text-align: center;
+            display: inline-block;
+        }
 
-.badge-inactive {
-    color: white;
-    background-color: red;
-    padding: 5px 10px;
-    border-radius: 25px;
-    text-align: center;
-    display: inline-block;
-}
-
-</style>
+        .badge-inactive {
+            color: white;
+            background-color: red;
+            padding: 5px 10px;
+            border-radius: 25px;
+            text-align: center;
+            display: inline-block;
+        }
+    </style>
     <section class="content-main">
         <div class="content-header">
             <div>
@@ -128,7 +127,7 @@
                                                 <span class="<%= offer.status ? 'badge-active' : 'badge-inactive' %>">
                                                     <%= offer.status ? 'Active' : 'Inactive' %>
                                                 </span>
-                                                
+
                                             </td>
                                             <td>
                                                 <div class="dropdown">
@@ -230,55 +229,55 @@
             });
 
             function validateOfferForm(data) {
-    let valid = true;
+                let valid = true;
 
-    // Validate offer name: non-empty, should not start with space, and length between 2 and 50 characters
-    if (!data.offerName || data.offerName.trim() === '' || data.offerName[0] === ' ' || data.offerName.length < 2 || data.offerName.length > 50) {
-        document.getElementById('offerNameError').textContent = 'Offer name is required, should not start with space, and should be between 2 and 50 characters long';
-        valid = false;
-    } else {
-        document.getElementById('offerNameError').textContent = ''; // Clear the error if valid
-    }
+                // Validate offer name: non-empty, should not start with space, and length between 2 and 50 characters
+                if (!data.offerName || data.offerName.trim() === '' || data.offerName[0] === ' ' || data.offerName.length < 2 || data.offerName.length > 50) {
+                    document.getElementById('offerNameError').textContent = 'Offer name is required, should not start with space, and should be between 2 and 50 characters long';
+                    valid = false;
+                } else {
+                    document.getElementById('offerNameError').textContent = ''; // Clear the error if valid
+                }
 
-    // Validate discount percentage: must be between 5 and 90
-    if (!data.discountPercentage) {
-        document.getElementById('discountPercentageError').textContent = 'Discount percentage is required';
-        valid = false;
-    } else if (isNaN(data.discountPercentage) || data.discountPercentage < 5 || data.discountPercentage > 90) {
-        document.getElementById('discountPercentageError').textContent = 'Discount percentage should be a number between 5 and 90';
-        valid = false;
-    } else {
-        document.getElementById('discountPercentageError').textContent = ''; // Clear the error if valid
-    }
+                // Validate discount percentage: must be between 5 and 90
+                if (!data.discountPercentage) {
+                    document.getElementById('discountPercentageError').textContent = 'Discount percentage is required';
+                    valid = false;
+                } else if (isNaN(data.discountPercentage) || data.discountPercentage < 5 || data.discountPercentage > 90) {
+                    document.getElementById('discountPercentageError').textContent = 'Discount percentage should be a number between 5 and 90';
+                    valid = false;
+                } else {
+                    document.getElementById('discountPercentageError').textContent = ''; // Clear the error if valid
+                }
 
-    // Validate offer type: non-empty
-    if (!data.offerType || data.offerType.trim() === '') {
-        document.getElementById('offerTypeError').textContent = 'Offer type is required';
-        valid = false;
-    } else {
-        document.getElementById('offerTypeError').textContent = ''; // Clear the error if valid
-    }
+                // Validate offer type: non-empty
+                if (!data.offerType || data.offerType.trim() === '') {
+                    document.getElementById('offerTypeError').textContent = 'Offer type is required';
+                    valid = false;
+                } else {
+                    document.getElementById('offerTypeError').textContent = ''; // Clear the error if valid
+                }
 
-    // Validate select item: non-empty
-    if (!data.selectItem || data.selectItem.trim() === '') {
-        document.getElementById('selectItemError').textContent = 'Select an item';
-        valid = false;
-    } else {
-        document.getElementById('selectItemError').textContent = ''; // Clear the error if valid
-    }
+                // Validate select item: non-empty
+                if (!data.selectItem || data.selectItem.trim() === '') {
+                    document.getElementById('selectItemError').textContent = 'Select an item';
+                    valid = false;
+                } else {
+                    document.getElementById('selectItemError').textContent = ''; // Clear the error if valid
+                }
 
-    // Validate expiry date: non-empty, must be a valid future date
-    const expiryDate = new Date(data.expiryDate);
-    const today = new Date();
-    if (!data.expiryDate || isNaN(expiryDate.getTime()) || expiryDate <= today) {
-        document.getElementById('expiryDateError').textContent = 'Expiry date is required and must be a future date';
-        valid = false;
-    } else {
-        document.getElementById('expiryDateError').textContent = ''; // Clear the error if valid
-    }
+                // Validate expiry date: non-empty, must be a valid future date
+                const expiryDate = new Date(data.expiryDate);
+                const today = new Date();
+                if (!data.expiryDate || isNaN(expiryDate.getTime()) || expiryDate <= today) {
+                    document.getElementById('expiryDateError').textContent = 'Expiry date is required and must be a future date';
+                    valid = false;
+                } else {
+                    document.getElementById('expiryDateError').textContent = ''; // Clear the error if valid
+                }
 
-    return valid;
-}
+                return valid;
+            }
 
 
             function clearErrorMessages() {
@@ -293,24 +292,24 @@
                 const table = document.getElementById('offerTable').getElementsByTagName('tbody')[0];
                 const row = table.insertRow();
 
-                row.insertCell(0).textContent = table.rows.length; 
-                row.insertCell(1).textContent = offer.offerName; 
-                row.insertCell(2).textContent = offer.discountPercentage; 
-                row.insertCell(3).textContent = offer.offerType; 
-                row.insertCell(4).textContent = selectedItemName; 
-                row.insertCell(5).textContent = new Date(offer.expiryDate).toLocaleDateString(); 
+                row.insertCell(0).textContent = table.rows.length;
+                row.insertCell(1).textContent = offer.offerName;
+                row.insertCell(2).textContent = offer.discountPercentage;
+                row.insertCell(3).textContent = offer.offerType;
+                row.insertCell(4).textContent = selectedItemName;
+                row.insertCell(5).textContent = new Date(offer.expiryDate).toLocaleDateString();
 
                 const statusCell = row.insertCell(6);
 
                 const statusSpan = document.createElement('span');
-                statusSpan.textContent = offer.status ? 'Active' : 'Inactive'; 
+                statusSpan.textContent = offer.status ? 'Active' : 'Inactive';
 
                 statusSpan.style.color = 'white';
-                statusSpan.style.backgroundColor = offer.status ? 'green' : 'red'; 
+                statusSpan.style.backgroundColor = offer.status ? 'green' : 'red';
                 statusSpan.style.padding = '5px 10px';
                 statusSpan.style.borderRadius = '25px';
                 statusSpan.style.textAlign = 'center';
-                statusSpan.style.display = 'inline-block'; 
+                statusSpan.style.display = 'inline-block';
 
                 // Append the span to the status cell
                 statusCell.appendChild(statusSpan);

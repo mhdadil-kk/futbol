@@ -1,4 +1,6 @@
 <%- include('header') %>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+
     <style>
         .search-input {
             width: 100%;
@@ -133,7 +135,6 @@
                         <div class="row">
                             <div class="col-lg-6 col-md-6 col-sm-6">
                                 <div class="shop__product__option__left">
-                                    <p>Showing 1–12 of 126 results</p>
                                 </div>
                             </div>
                             <div class="col-lg-6 col-md-6 col-sm-6">
@@ -183,7 +184,7 @@
                                         <h6>
                                             <%= product.name %>
                                         </h6>
-                                        <a href="#" class="add-cart">+ Add To Cart</a>
+                                        <a class="add-cart" onclick="Addtocart('<%= product._id %>')" >+ Add To Cart</a>
 
                                         <h5>
                                             <% if (product.offerPrice !==null) { %>
@@ -212,17 +213,7 @@
                             <% }); %>
                     </div>
 
-                    <!-- <div class="row">
-                        <div class="col-lg-12">
-                            <div class="product__pagination">
-                                <a class="active" href="#">1</a>
-                                <a href="#">2</a>
-                                <a href="#">3</a>
-                                <span>...</span>
-                                <a href="#">21</a>
-                            </div>
-                        </div>
-                    </div> -->
+                  
                 </div>
             </div>
         </div>
@@ -230,6 +221,9 @@
     <!-- Shop Section End -->
 
     <%- include('footer') %>
+
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
     <script>
         $(document).ready(function () {
@@ -254,7 +248,7 @@
                                     ${offerTag} <!-- Offer tag -->
                                     <ul class="product__hover">
                                         <li>
-                                            <a href="#" class="wishlist-btn" data-product-id="${product._id}">
+                                            <a  class="wishlist-btn" data-product-id="${product._id}">
                                                 <img src="img/icon/${isInWishlist}" alt="Add to wishlist" class="heart-icon">
                                             </a>
                                         </li>
@@ -262,7 +256,7 @@
                                 </div>
                                 <div class="product__item__text">
                                     <h6>${product.name}</h6>
-                                    <a href="#" class="add-cart">+ Add To Cart</a>
+                                    <a class="add-cart"  onclick="Addtocart('${product._id}')" >+ Add To Cart</a>
                                     <h5>
                                         ${product.offerPrice !== null ? `
                                             <small style="text-decoration: line-through; opacity: 70%;">₹${product.price}</small>
@@ -307,6 +301,7 @@
         
             // Handle search form submission
             $('#searchForm').submit(function (e) {
+                console.log("here it its")
                 e.preventDefault();
                 const searchQuery = $('#searchInput').val();
                 $.ajax({
@@ -335,6 +330,8 @@
                 });
             });
         
+
+   
             // Wishlist button functionality
             $(document).on('click', '.wishlist-btn', function (event) {
                 event.preventDefault(); // Prevent default anchor behavior
@@ -366,5 +363,63 @@
                 });
             });
         });
+
+
+        function Addtocart(productId) {
+                    event.preventDefault();
+                    const quantity = 1;
+                    fetch('/add-to-cart', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            productId: productId,
+                            quantity: quantity
+                        })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Product added to cart, show success SweetAlert
+                                Swal.fire({
+                                    title: 'Product Added to Cart!',
+                                    text: "Do you want to view your cart or continue shopping?",
+                                    icon: 'success',
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Go to Cart',
+                                    cancelButtonText: 'Continue Shopping'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        window.location.href = '/cart'; // Redirect to cart page
+                                    }
+                                });
+                            } else {
+                                // Check if the failure is due to user not being logged in
+                                if (data.message == 'User not logged in') {
+                                    Swal.fire({
+                                        title: 'Not Logged In',
+                                        text: "You need to log in to add products to your cart.",
+                                        icon: 'warning',
+                                        showCancelButton: true,
+                                        confirmButtonText: 'Log In',
+                                        cancelButtonText: 'Cancel'
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            window.location.href = '/login'; // Redirect to login page
+                                        }
+                                    });
+                                } else if (data.message == 'Product Out of stock') {
+                                    // Show an Out of Stock message using Toastr
+                               
+                                    toastr.warning('This product is currently out of stock.');
+                                } else {
+                                    Swal.fire('Error', 'Failed to add the product to the cart. Please try again.', 'error');
+                                }
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                };
+
         </script>
         

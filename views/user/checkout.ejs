@@ -1,6 +1,15 @@
 <%- include('header') %>
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <style>
+        input.error {
+            border-color: red;
+        }
 
+        .text-danger {
+            color: red;
+            font-size: 12px;
+        }
+    </style>
     <!-- Breadcrumb Section Begin -->
     <section class="breadcrumb-option">
         <div class="container">
@@ -47,7 +56,8 @@
 
                             <h6 class="checkout__title">Select Shipping Address</h6>
                             <p>Shipping Address<span>*</span></p>
-                            <select class="form-control" id="addressSelect" name="address" required>
+                            <select class="form-control" id="addressSelect" name="address" required
+                                onchange="AddressChange()">
                                 <% addresses.forEach(address=> { %>
                                     <option value="<%= address._id %>">
                                         <%= address.streetAddress %>
@@ -55,6 +65,10 @@
                                     <% }); %>
                                         <option value="new-address">Add a new address</option>
                             </select>
+
+
+
+
                         </div>
 
                         <div class="col-lg-4 col-md-6">
@@ -148,12 +162,88 @@
     </div>
 
 
+    <div class="modal fade" id="newAddressModal" tabindex="-1" aria-labelledby="newAddressModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newAddressModalLabel">Add New Address</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="newAddressForm" onsubmit=" addAddress(event)">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label">Name</label>
+                                <input type="text" class="form-control" id="adname" name="adname"
+                                    placeholder="John Doe">
+                                <span class="text-danger" id="adnameError"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="streetAddress" class="form-label">Street
+                                    Address</label>
+                                <input type="text" class="form-control" id="adstreetAddress" name="adstreetAddress"
+                                    placeholder="123 Main St">
+                                <span class="text-danger" id="adstreetAddressError"></span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="country" class="form-label">Country</label>
+                                <input type="text" class="form-control" id="adcountry" name="adcountry"
+                                    placeholder="United States">
+                                <span class="text-danger" id="adcountryError"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="state" class="form-label">State</label>
+                                <input type="text" class="form-control" id="adstate" name="adstate"
+                                    placeholder="California">
+                                <span class="text-danger" id="adstateError"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="district" class="form-label">District</label>
+                                <input type="text" class="form-control" id="addistrict" name="addistrict"
+                                    placeholder="Los Angeles">
+                                <span class="text-danger" id="addistrictError"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="pinCode" class="form-label">Pin Code</label>
+                                <input type="text" class="form-control" id="adpinCode" name="adpinCode"
+                                    placeholder="90001">
+                                <span class="text-danger" id="adpinCodeError"></span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="mobile" class="form-label">Mobile</label>
+                                <input type="text" class="form-control" id="admobile" name="admobile"
+                                    placeholder="+1 234 567 890">
+                                <span class="text-danger" id="admobileError"></span>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">Save Address</button>
+                        </div>
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <!-- Checkout Section End -->
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
     <script>
+
+
+
         document.getElementById('applyCouponBtn').addEventListener('click', async function () {
             const couponCode = document.getElementById('couponCodeInput').value;
             const originalSubtotal = parseFloat(document.querySelector('.checkout__total__all li:nth-child(1) span').textContent.replace('₹ ', ''));
@@ -286,6 +376,124 @@
             });
         });
 
+
+
+        function AddressChange() {
+            let addressSelect = document.getElementById('addressSelect').value
+            if (addressSelect === 'new-address') {
+                // Use Bootstrap 5's native JavaScript modal handling
+                $('#newAddressModal').modal('show');
+                addressSelect = '';
+            }
+        }
+
+        function clearErrors() {
+            document.querySelectorAll('.text-danger').forEach(span => {
+                span.textContent = ''; // Clear error messages
+            });
+        }
+
+        function showError(id, message) {
+            document.getElementById(id).textContent = message;
+        }
+
+      
+        // Function to handle form submission
+        async function addAddress(event) {
+
+            event.preventDefault(); // Prevent form submission
+            clearErrors(); // Clear any previous error messages
+            let valid = true;
+
+            const fields = [
+                { id: 'adname', error: 'Name is required.', regex: /^[a-zA-Z\s]+$/, errorMessage: 'Name can only contain letters and spaces.' },
+                { id: 'adstreetAddress', error: 'Street Address is required.', regex: /^[a-zA-Z0-9\s]+$/, errorMessage: 'Street Address can only contain letters, numbers, and spaces.' },
+                { id: 'adcountry', error: 'Country is required.', regex: /^[a-zA-Z\s]+$/, errorMessage: 'Country can only contain letters and spaces.' },
+                { id: 'adstate', error: 'State is required.', regex: /^[a-zA-Z\s]+$/, errorMessage: 'State can only contain letters and spaces.' },
+                { id: 'addistrict', error: 'District is required.', regex: /^[a-zA-Z\s]+$/, errorMessage: 'District can only contain letters and spaces.' },
+                { id: 'adpinCode', error: 'Pin Code is required.', regex: /^\d{6}$/, errorMessage: 'Pin Code must be 6 digits.' },
+                { id: 'admobile', error: 'Mobile number is required.', regex: /^\d{10}$/, errorMessage: 'Mobile number must be 10 digits.' }
+            ];
+
+            // Validate each field
+            fields.forEach(field => {
+                const value = document.getElementById(field.id).value.trim();
+
+                if (!value) {
+                    showError(`${field.id}Error`, field.error);
+                    valid = false;
+                } else if (/^\s/.test(value)) {
+                    showError(`${field.id}Error`, 'Field cannot start with a space.');
+                    valid = false;
+                } else if (!field.regex.test(value)) {
+                    showError(`${field.id}Error`, field.errorMessage);
+                    valid = false;
+                }
+            });
+
+            if (valid) {
+                const data = {
+                    userId: '<%= user._id %>', // Ensure the correct user ID is passed
+                    name: document.getElementById('adname').value.trim(),
+                    streetAddress: document.getElementById('adstreetAddress').value.trim(),
+                    state: document.getElementById('adstate').value.trim(),
+                    district: document.getElementById('addistrict').value.trim(),
+                    pinCode: document.getElementById('adpinCode').value.trim(),
+                    mobile: document.getElementById('admobile').value.trim(),
+                    country: document.getElementById('adcountry').value.trim()
+                };
+
+                try {
+                    const response = await fetch('/add_address', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (response.ok) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: 'Address saved successfully!',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        const errorData = await response.json();
+                        Swal.fire({
+                            title: 'Error!',
+                            text: errorData.message || 'Failed to save address.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'An error occurred while saving the address.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            }
+        }
+
+        // Function to clear previous error messages
+        function clearErrors() {
+            const errorElements = document.querySelectorAll('.text-danger');
+            errorElements.forEach(element => {
+                element.textContent = ''; // Clear all error messages
+            });
+        }
+
+        // Function to show an error message
+        function showError(id, message) {
+            document.getElementById(id).textContent = message;
+        }
 
 
         document.addEventListener('DOMContentLoaded', function () {
@@ -486,7 +694,7 @@
                                 confirmButtonText: 'OK'
                             });
                         }
-                    });    
+                    });
             }
         });
 

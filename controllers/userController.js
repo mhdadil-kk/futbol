@@ -566,21 +566,23 @@ const search = async (req, res) => {
     try {
         const query = req.query.query ? req.query.query.trim() : '';
 
+        // If no query is provided, return all products (without hiding logic)
+        let products;
         if (!query) {
-            const defaultProducts = await Product.find({ status: false });
-            return res.json(defaultProducts);
+            products = await Product.find().populate('category');
+        } else {
+            // If a query is provided, filter based on the product name
+            products = await Product.find({
+                name: { $regex: query, $options: 'i' }
+            }).populate('category');
         }
-
-        const products = await Product.find({
-            name: { $regex: query, $options: 'i' }
-        }).populate('category');
 
         const activeOffers = await Offer.find({ 
             status: true, 
             expiryDate: { $gte: new Date() } 
         });
 
-        // Filter out hidden products and products with hidden categories
+        // Filter out hidden products and hidden categories
         const visibleProducts = products.filter(product => product.status === false && product.category.is_hide === false);
 
         const productData = visibleProducts.map(product => {
@@ -611,6 +613,7 @@ const search = async (req, res) => {
         res.status(500).json({ error: 'An error occurred while searching for products.' });
     }
 };
+
 
 // Load Product Details Function
 const loadProductDetails = async (req, res) => {

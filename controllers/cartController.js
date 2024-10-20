@@ -94,7 +94,6 @@ const addToCart = async (req, res) => {
 
         // Check if the product is out of stock
         if (product.stock === 0) {
-            console.log('error')
             return res.status(404).json({ success: false, message: 'Product Out of stock' });
         }
 

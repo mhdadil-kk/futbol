@@ -4,135 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f8f8f8;
-        }
-        .main-container {
-            width: 90%;
-            max-width: 900px;
-            height: 70%;
-            display: flex;
-            background: #c8b193;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .form-container {
-            width: 50%;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .form-container h2 {
-            margin-bottom: 20px;
-            font-size: 2rem;
-            font-weight: bold;
-        }
-        .form-container input[type="email"], 
-        .form-container input[type="password"] {
-            width: 80%;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
-        .button {
-            padding: 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        .button:hover {
-            background-color: #45a049;
-        }
-        .form-container .social-buttons {
-            border-radius:5ch;
-            background-color: #ccc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        .form-container .social-buttons img {
-            height: 40px;
-            cursor: pointer;
-            margin-right: 10px;
-        }
-        .form-container p {
-            margin-top: 20px;
-            text-align: center;
-        }
-        .form-container p a {
-            color: #4CAF50;
-            text-decoration: none;
-        }
-        .form-container p a:hover {
-            text-decoration: underline;
-        }
-        .image-section {
-            width: 50%;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
-        #go{
-            text-decoration:none;
-        }
-        .text-danger{
-            color: red;
-        }
-        
-    </style>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
-<body>
-    
-    <div class="main-container">
-        <div class="form-container">
-            <form action="/login" method="POST" novalidate>
-                <h2>Login</h2>
-                <% if (typeof error !== 'undefined' && error) { %>
-                    <div class=" text-danger"><%= error %></div>
-                <% } %>
-                <br>
-                <label for="email">Email</label>
-                <br>
-                <input type="email" id="email" name="email" placeholder="Enter email" required aria-label="Email">
-                <% if (errors && errors.some(e => e.path === 'email')) { %>
-                    <div class="text-danger">
-                       <small><%= errors.find(e => e.path === 'email').msg %></small> 
+<body class="bg-light">
+
+    <div class="container d-flex justify-content-center align-items-center vh-100">
+        <div class="row w-100" >
+            <div class="col-md-6  p-5 rounded shadow" style="background-color:  #c8b193;" >
+                <form action="/login" method="POST" novalidate >
+                    <h2 class="text-center mb-4">Login</h2>
+                    <% if (typeof error !== 'undefined' && error) { %>
+                        <div class="text-danger text-center"><%= error %></div>
+                    <% } %>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" class="form-control" placeholder="Enter email" required aria-label="Email">
+                        <% if (errors && errors.some(e => e.path === 'email')) { %>
+                            <div class="text-danger">
+                               <small><%= errors.find(e => e.path === 'email').msg %></small> 
+                            </div>
+                        <% } %>
                     </div>
-                <% } %>
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" placeholder="Password" required aria-label="Password">
-                <% if (errors && errors.some(e => e.path === 'password')) { %>
-                    <div class="text-danger">
-                        <small><%= errors.find(e => e.path === 'password').msg %></small>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="Password" required aria-label="Password">
+                        <% if (errors && errors.some(e => e.path === 'password')) { %>
+                            <div class="text-danger">
+                                <small><%= errors.find(e => e.path === 'password').msg %></small>
+                            </div>
+                        <% } %>
                     </div>
-                <% } %>
-                <br>
-                <input class="button" type="submit" value="Login">
-                <a href="/forgot-password">forget password ?</a>
-                
-                <div class="social-buttons">
-                    <a href="/auth/google"><img src="img/icon/Google.WEBP" alt="Google Sign-In"></a>
-                    <a href="/auth/google" id="go">Google Sign-In</a>
-                </div>
-                
-                <p>Don't have an account? <a href="/register">Sign Up</a></p>
-            </form>  
+                    <button type="submit" class="btn btn-info btn-block">Login</button>
+                    <a href="/forgot-password" class="d-block text-center mt-2">Forgot password?</a>
+                    
+                    <div class="d-flex align-items-center justify-content-center my-3">
+                        <a href="/auth/google" class="btn btn-outline-danger mx-2" >
+                            <img src="img/icon/Google.WEBP" alt="Google Sign-In" style="height: 20px; margin-right: 5px;">Google Sign-In
+                        </a>
+                    </div>
+                    
+                    <p class="text-center">Don't have an account? <a href="/register">Sign Up</a></p>
+                </form>  
+            </div>
+            <div class="col-md-6 d-none d-md-block" style="background-image: url('assets/imgs/theme/logimg.jpg'); background-size: cover; background-position: center; border-radius: 0 5px 5px 0;"></div>
         </div>
-        <div class="image-section" style="background-image: url('assets/imgs/theme/logimg.jpg');"></div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
-

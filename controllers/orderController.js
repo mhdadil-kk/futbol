@@ -99,6 +99,7 @@ const cancelOrder = async (req, res) => {
 
         // Check if the payment method was 'Wallet' or 'Razorpay'
         if (order.paymentMethod === 'Wallet' || order.paymentMethod === 'Razorpay') {
+            if(order.paymentStatus === "Paid"){ 
             user.wallet_balance += order.totalPrice;
             await user.save();
 
@@ -109,6 +110,7 @@ const cancelOrder = async (req, res) => {
                 payment_type: 'Credit',  
             });
             await walletTransaction.save();
+        }
         }
 
         await order.save();  

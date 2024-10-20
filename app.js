@@ -8,6 +8,7 @@ const { v4: uuidv4 } = require('uuid');
 const { ensureAuthenticated, isAuthenticated } = require('./middlewares/auth');
 const connectDB = require('./config/db');
 require('dotenv').config();
+const colors = require('colors') 
 
 const app = express();
 
@@ -73,22 +74,12 @@ app.get('/api/check-auth', (req, res) => {
     res.json({ isLoggedIn });
 });
 
-// Handle 404
-app.use((req, res, next) => {
-    res.status(404).render('admin/404', { pageTitle: 'Page Not Found' });
-});
-
-// Handle other errors
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).render('admin/404', { pageTitle: 'Page Not Found' });
-});
 
 // Server
 const PORT = process.env.PORT || 3000;
 connectDB().then(() => {
-    console.log('Connected to DB');
+    console.log('Connected to DB'.bgGreen.bold);
     app.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT}`);
+        console.log(`Server is running on port ${PORT}`.bgBlue.bold);
     });
 });

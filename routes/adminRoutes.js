@@ -74,4 +74,16 @@ router.post('/sales-report/download/:format',ensureAdmin,adminController.downloa
 
 router.get('/logout',adminController.logout)
 
+// Handle 404
+router.use((req, res, next) => {
+  res.status(404).render('admin/404', { pageTitle: 'Page Not Found' });
+});
+
+// Handle other errors
+router.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).render('admin/404', { pageTitle: 'Page Not Found' });
+});
+
+
 module.exports = router;

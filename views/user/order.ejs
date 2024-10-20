@@ -165,8 +165,10 @@
                     Order #<%= order._id ? String(order._id).slice(-5).toUpperCase() : 'N/A' %>
                 </div>
                 <div class="order-date">
-                    <i class="fas fa-calendar-alt"></i> <%= order.orderDate ? new Date(order.orderDate).toISOString().split('T')[0] : 'N/A' %>
+                    <i class="fas fa-calendar-alt"></i> 
+                    <%= order.orderDate ? new Date(order.orderDate).toISOString().replace('T', ' ').substring(0, 16) : 'N/A' %>
                 </div>
+                
             </div>
     
             <div class="order-body">
