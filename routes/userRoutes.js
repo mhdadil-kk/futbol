@@ -70,6 +70,7 @@ router.get('/orders',ensureAuthenticated,orderController.loadOrderList)
 router.post('/downloadInvoice',generateInvoice)
 router.get('/order-details/:orderId',ensureAuthenticated,orderController.loadOrderDetails)
 router.post('/order/cancel/:orderId',ensureAuthenticated,orderController.cancelOrder)
+router.post('/order/return/:orderId', ensureAuthenticated, orderController.createReturnOrder);
 router.get('/logout',userController.logout);
 // Handle 404
 router.use((req, res, next) => {

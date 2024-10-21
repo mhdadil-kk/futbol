@@ -6,7 +6,9 @@ const Wallet = require("../models/wallet");
 const Offer = require('../models/offer')
 const Product = require('../models/product')
 const crypto = require('crypto');
-
+const ReturnOrder = require("../models/ReturnOrder");
+const mongoose = require('mongoose');
+const { ObjectId } = mongoose.Types;
 const razorpayInstance = new Razorpay({
     key_id: process.env.KEY_ID,
     key_secret: process.env.KEY_SECRET
@@ -42,10 +44,39 @@ const loadOrderDetails = async (req, res) => {
         const orderId = req.params.orderId;
         console.log(orderId, "order ID");
 
+        // Fetch returned products
+        const returnedProducts = await ReturnOrder.aggregate([
+            { $match: { orderId: new ObjectId(orderId) } },
+            { $unwind: "$products" },
+            {
+                $project: {
+                    _id: 1,
+                    orderId: 1,
+                    userId: 1,
+                    "products.productId": "$products.productId",
+                    "products.quantity": "$products.quantity",
+                    reason: 1,
+                    status: 1,
+                    createdAt: 1,
+                    updatedAt: 1
+                }
+            }
+        ]);
+
+        console.log(returnedProducts);
+
+        // Create a mapping of returned products
+        const returnedProductMap = returnedProducts.reduce((acc, item) => {
+            acc[item.products.productId] = item.status; // Assuming 'status' is what you want to display
+            return acc;
+        }, {});
+
+        // Find the order details
         const order = await Order.findById(orderId)
             .populate('products.product')
             .populate('deliveryAddress')
-            .populate('user')
+            .populate('user');
+
         if (!order) {
             return res.status(404).render('error', { message: 'Order not found' });
         }
@@ -55,9 +86,12 @@ const loadOrderDetails = async (req, res) => {
         const estimatedDeliveryDate = new Date(orderDate);
         estimatedDeliveryDate.setDate(orderDate.getDate() + 4); // Add 4 days
 
+        // Render the view and pass order, returnedProducts, and returnedProductMap
         res.render('user/order-Details', {
             order,
-            estimatedDeliveryDate: estimatedDeliveryDate.toDateString() // Format as needed
+            estimatedDeliveryDate: estimatedDeliveryDate.toDateString(),
+            returnedProducts,
+            returnedProductMap // Include the mapping in the response
         });
 
     } catch (error) {
@@ -65,6 +99,8 @@ const loadOrderDetails = async (req, res) => {
         res.status(500).render('error', { message: 'Error fetching order details' });
     }
 };
+
+
 
 const cancelOrder = async (req, res) => {
     const { orderId } = req.params;
@@ -461,6 +497,61 @@ const updateOrder = async (req, res) => {
 }
 
 
+
+const createReturnOrder = async (req, res) => {
+    const { returnReason, selectedProducts } = req.body;
+
+    try {
+        // Find the order to ensure it belongs to the user and is eligible for return
+        const order = await Order.findById(req.params.orderId)
+            .populate('products.product')
+            .populate('user'); // Ensure the user field is populated
+
+        console.log("Order:", order); // Debugging line
+
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found.' });
+        }
+
+        if (!order.user) {
+            return res.status(500).json({ success: false, message: 'Order user is not defined.' });
+        }
+
+
+        // Verify user ownership
+        if (order.user._id.toString() !== req.session.user_id) {
+            return res.status(403).json({ success: false, message: 'You are not authorized to return this order.' });
+        }
+
+        // Create return order object
+        const returnOrder = new ReturnOrder({
+            orderId: req.params.orderId,
+            userId: req.session.user_id, // Use session user ID
+            products: selectedProducts.map(productId => {
+                const orderedProduct = order.products.find(item => item.product._id.toString() === productId);
+                return {
+                    productId,
+                    quantity: orderedProduct ? orderedProduct.quantity : 1 // Default to 1 if not found
+                };
+            }),
+            reason: returnReason,
+            status: 'requested'
+        });
+
+        // Save return order to the database
+        await returnOrder.save();
+
+        res.status(201).json({ success: true, message: 'Return request submitted successfully.', returnOrder });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal server error.', error: error.message });
+    }
+};
+
+
+
+
+
 module.exports = {
     loadOrderList,
     loadOrderDetails,
@@ -470,6 +561,7 @@ module.exports = {
     adOrderDetails,
     confirmPayment,
     continuePayment,
-    updateOrder
+    updateOrder,
+    createReturnOrder
 }
 
