@@ -22,17 +22,17 @@ const ReturnOrderSchema = new Schema({
             type: Number,
             required: true,
             default: 1 // Default quantity if not provided
+        },
+        reason: { // Reason for returning the specific product
+            type: String,
+            required: true
+        },
+        status: { 
+            type: String, 
+            enum: ['requested', 'approved', 'rejected', 'returned'], 
+            default: 'requested' 
         }
     }],
-    reason: { // Moved reason outside of products array
-        type: String,
-        required: true
-    },
-    status: { 
-        type: String, 
-        enum: ['requested', 'approved', 'rejected', 'processed'], 
-        default: 'requested' 
-    },
     createdAt: { 
         type: Date, 
         default: Date.now 

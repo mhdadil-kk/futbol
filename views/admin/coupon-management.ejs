@@ -96,7 +96,7 @@
                                         <td><%= coupon.maxredeemAmount %></td>
                                         <td><%= new Date(coupon.expires).toLocaleDateString() %></td>
                                         <td>
-                                            <span class="<%= coupon.status ? 'badge bg-success' : 'badge bg-danger' %>">
+                                            <span class="<%= coupon.status ? 'badge bg-success' : 'badge bg-danger' %>" style="width: 60px; height: 20px;">
                                                 <%= coupon.status ? 'Active' : 'Inactive' %>
                                             </span>
                                         </td>

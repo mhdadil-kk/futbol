@@ -90,23 +90,24 @@
     </section>
     <!-- Banner Section End -->
 
-    <!-- Product Section Begin -->
 <!-- Product Section Begin -->
 <section class="product spad">
     <div class="container">
         <div class="row">
             <div class="col-lg-12">
+                <!-- Filter Controls -->
                 <ul class="filter__controls">
                     <li class="active" data-filter="*">New Arrivals</li>
                 </ul>
             </div>
         </div>
+
         <div class="row product__filter">
             <% products.forEach(function(product) { %>
                 <div class="col-lg-3 col-md-6 col-sm-6 mix <%= product.category %>">
                     <div class="product__item">
                         <div class="product__item__pic">
-                            <img src="/uploads/<%= product.images[0] %>" alt="<%= product.name %>" class="img-fluid" /> <!-- Use img tag here -->
+                            <img src="/uploads/<%= product.images[0] %>" alt="<%= product.name %>" class="img-fluid" />
                             <% if (product.isNew) { %>
                                 <span class="label">New</span>
                             <% } %>
@@ -122,10 +123,34 @@
                     </div>
                 </div>
             <% }) %>
-            
+        </div>
+
+        <!-- See More / Shop Now Button with Inline Styles -->
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <a href="/shop"
+                   style="
+                        display: inline-block;
+                        padding: 10px 20px;
+                        background-color: #000000;
+                        color: #fff;
+                        border: none;
+                        border-radius: 5px;
+                        text-decoration: none;
+                        margin-top: 20px;
+                        transition: background-color 0.3s, color 0.3s, transform 0.3s, box-shadow 0.3s;
+                    "
+                   onmouseover="this.style.backgroundColor='#ff6600'; this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.2)'; this.style.transform='scale(1.05)';"
+                   onmouseout="this.style.backgroundColor='#000000'; this.style.boxShadow='none'; this.style.transform='scale(1)';">
+                    See More Products
+                </a>
+            </div>
         </div>
     </div>
 </section>
+
+
+
 
     <%- include('footer') %>
 

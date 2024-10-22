@@ -39,12 +39,13 @@ const loadOrderList = async (req, res) => {
 };
 
 
+
 const loadOrderDetails = async (req, res) => {
     try {
         const orderId = req.params.orderId;
         console.log(orderId, "order ID");
 
-        // Fetch returned products
+        // Fetch returned products with detailed status and reason
         const returnedProducts = await ReturnOrder.aggregate([
             { $match: { orderId: new ObjectId(orderId) } },
             { $unwind: "$products" },
@@ -55,8 +56,8 @@ const loadOrderDetails = async (req, res) => {
                     userId: 1,
                     "products.productId": "$products.productId",
                     "products.quantity": "$products.quantity",
-                    reason: 1,
-                    status: 1,
+                    "products.reason": "$products.reason", // Include reason for each product
+                    "products.status": "$products.status", // Include status for each product
                     createdAt: 1,
                     updatedAt: 1
                 }
@@ -65,9 +66,12 @@ const loadOrderDetails = async (req, res) => {
 
         console.log(returnedProducts);
 
-        // Create a mapping of returned products
+        // Create a mapping of returned products with status and reason
         const returnedProductMap = returnedProducts.reduce((acc, item) => {
-            acc[item.products.productId] = item.status; // Assuming 'status' is what you want to display
+            acc[item.products.productId] = {
+                status: item.products.status, // Status of the product
+                reason: item.products.reason // Reason for return
+            };
             return acc;
         }, {});
 
@@ -91,7 +95,7 @@ const loadOrderDetails = async (req, res) => {
             order,
             estimatedDeliveryDate: estimatedDeliveryDate.toDateString(),
             returnedProducts,
-            returnedProductMap // Include the mapping in the response
+            returnedProductMap 
         });
 
     } catch (error) {
@@ -99,6 +103,7 @@ const loadOrderDetails = async (req, res) => {
         res.status(500).render('error', { message: 'Error fetching order details' });
     }
 };
+
 
 
 
@@ -439,7 +444,8 @@ const adOrderLoad = async (req, res) => {
         const orders = await Order.find()
             .populate('user', 'name email')
             .populate('products.product', 'name')
-            .populate('deliveryAddress');
+            .populate('deliveryAddress')
+            .sort({ createdAt: -1 });
         res.render('admin/orderList', { orders });
     } catch (error) {
         console.error(error);
@@ -450,27 +456,59 @@ const adOrderLoad = async (req, res) => {
 
 const adOrderDetails = async (req, res) => {
     try {
-        const order = await Order.findById(req.params.id)
-            .populate('user')
-            .populate({
-                path: 'products.product',
-                select: 'name images price'
-            })
+        const orderId = req.params.id;
+
+        // Fetch returned products for the order with detailed status and reason
+        const returnedProducts = await ReturnOrder.aggregate([
+            { $match: { orderId: new ObjectId(orderId) } },
+            { $unwind: "$products" },
+            {
+                $project: {
+                    _id: 1,
+                    orderId: 1,
+                    userId: 1,
+                    "products.productId": "$products.productId",
+                    "products.quantity": "$products.quantity",
+                    "products.reason": "$products.reason", // Include return reason for each product
+                    "products.status": "$products.status", // Include return status for each product
+                    createdAt: 1,
+                    updatedAt: 1
+                }
+            }
+        ]);
+
+        // Create a map of returned products, their statuses, and reasons
+        const returnedProductMap = returnedProducts.reduce((acc, item) => {
+            acc[item.products.productId] = {
+                status: item.products.status, // Status of the return
+                reason: item.products.reason  // Return reason
+            };
+            return acc;
+        }, {});
+
+        // Fetch order details
+        const order = await Order.findById(orderId)
+            .populate('products.product')
             .populate('deliveryAddress')
+            .populate('user')
             .exec();
 
         if (!order) {
-            return res.status(404).send('Order not found');
+            return res.status(404).render('error', { message: 'Order not found' });
         }
 
+        // Render the admin order detail page
         res.render('admin/orders-detail', {
-            order
+            order,
+            returnedProductMap  // Pass this to the view
         });
     } catch (error) {
-        console.error('Error fetching order:', error);
+        console.error('Error fetching order details for admin:', error);
         res.status(500).send('Server Error');
     }
 };
+
+
 
 
 const updateOrder = async (req, res) => {
@@ -517,7 +555,6 @@ const createReturnOrder = async (req, res) => {
             return res.status(500).json({ success: false, message: 'Order user is not defined.' });
         }
 
-
         // Verify user ownership
         if (order.user._id.toString() !== req.session.user_id) {
             return res.status(403).json({ success: false, message: 'You are not authorized to return this order.' });
@@ -531,11 +568,13 @@ const createReturnOrder = async (req, res) => {
                 const orderedProduct = order.products.find(item => item.product._id.toString() === productId);
                 return {
                     productId,
-                    quantity: orderedProduct ? orderedProduct.quantity : 1 // Default to 1 if not found
+                    quantity: orderedProduct ? orderedProduct.quantity : 1, // Default to 1 if not found
+                    reason: returnReason, // Assign the reason to each product
+                    status: 'requested'    // Assign the initial status to each product
                 };
             }),
-            reason: returnReason,
-            status: 'requested'
+            // Removed reason and status from here as they are now included in products
+            status: 'requested' // This can be kept if you want an overall status for the return order
         });
 
         // Save return order to the database
@@ -545,6 +584,77 @@ const createReturnOrder = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: 'Internal server error.', error: error.message });
+    }
+};
+
+
+const returnReq = async (req, res) => {
+    const { productId, orderId, action } = req.body;
+
+    try {
+        // Find the order to ensure it exists and is eligible for return
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found.' });
+        }
+
+        // Find the return order associated with this order ID and product ID
+        const returnOrder = await ReturnOrder.findOne({ orderId, 'products.productId': productId });
+        if (!returnOrder) {
+            return res.status(404).json({ success: false, message: 'Return request not found.' });
+        }
+
+        // Find the specific product in the return order
+        const productIndex = returnOrder.products.findIndex(item => item.productId.toString() === productId);
+        if (productIndex === -1) {
+            return res.status(404).json({ success: false, message: 'Product not found in return request.' });
+        }
+
+        // Update return order status based on action (Accept, Reject, Returned)
+        if (action === 'Accept') {
+            returnOrder.products[productIndex].status = 'approved'; 
+        } else if (action === 'Reject') {
+            returnOrder.products[productIndex].status = 'rejected'; 
+        } else if (action === 'Returned') {
+            returnOrder.products[productIndex].status = 'returned'; 
+
+            // Check if the payment method is 'Razorpay' or 'Wallet'
+            if (order.paymentMethod === 'Razorpay' || order.paymentMethod === 'Wallet') {
+                // Find the user associated with this order
+                const user = await User.findById(order.user);
+                if (!user) {
+                    return res.status(404).json({ success: false, message: 'User not found.' });
+                }
+
+                // Find the product in the order
+                const product = order.products.find(item => item.product.toString() === productId);
+                if (!product) {
+                    return res.status(404).json({ success: false, message: 'Product not found in the order.' });
+                }
+
+                // Add the product amount to the user's wallet
+                user.wallet_balance = (user.wallet_balance || 0) + product.price;
+
+                // Save the updated user details
+                await user.save();
+                const walletTransaction = new Wallet({
+                    user: order.user,
+                    amount: product.price,
+                    payment_type: 'Credit',
+                });
+                await walletTransaction.save();
+            }
+        } else {
+            return res.status(400).json({ success: false, message: 'Invalid action.' });
+        }
+
+        // Save the updated return order
+        await returnOrder.save();
+
+        return res.status(200).json({ success: true, message: `Return request ${action}ed successfully.` });
+    } catch (error) {
+        console.error('Error processing return request:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error.' });
     }
 };
 
@@ -562,6 +672,7 @@ module.exports = {
     confirmPayment,
     continuePayment,
     updateOrder,
-    createReturnOrder
+    createReturnOrder,
+    returnReq
 }
 

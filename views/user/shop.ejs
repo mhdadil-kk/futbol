@@ -1,226 +1,147 @@
 <%- include('header') %>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
 
-    <style>
-        .search-input {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #000000;
-            border-radius: 5px;
-            background-color: #ffffff;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        .search-input:focus {
-            border-color: #000000;
-            outline: none;
-        }
-
-        .search-button {
-            background-color: #000000;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-left: 5px;
-            transition: background-color 0.3s;
-        }
-
-        .search-button:hover {
-            background-color: #0056b3;
-        }
-
-        .offer-tag {
-            position: absolute;
-            top: 5px;
-            /* Adjust as needed */
-            left: 10px;
-            /* Adjust as needed */
-            background-color: red;
-            /* Background color */
-            color: white;
-            /* Text color */
-            padding: 5px 10px;
-            /* Padding */
-            border-radius: 5px;
-            /* Rounded corners */
-            font-size: 12px;
-            /* Font size */
-            font-weight: bold;
-            /* Font weight */
-            z-index: 10;
-            /* Ensures it appears on top */
-        }
-    </style>
-
-    <!-- Breadcrumb Section Begin -->
-    <section class="breadcrumb-option" style="height: auto;">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="breadcrumb__text">
-                        <h4>Shop</h4>
-                        <div class="breadcrumb__links">
-                            <a href="/">Home</a>
-                            <span>Shop</span>
-                        </div>
+<!-- Breadcrumb Section Begin -->
+<section class="breadcrumb-option" style="height: auto;">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="breadcrumb__text">
+                    <h4>Shop</h4>
+                    <div class="breadcrumb__links">
+                        <a href="/">Home</a>
+                        <span>Shop</span>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
-    <!-- Breadcrumb Section End -->
+    </div>
+</section>
+<!-- Breadcrumb Section End -->
 
-    <!-- Shop Section Begin -->
-    <section class="shop spad">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-3">
-                    <div class="shop__sidebar">
-                        <div class="shop__sidebar__search">
-                            <form id="searchForm" action="#">
-                                <input type="text" id="searchInput" placeholder="Search..." class="search-input" style="background-color: #000000;">
-                                <button type="submit" class="search-button"><span class="icon_search"></span></button>
-                            </form>
-                        </div>
-                        <div class="shop__sidebar__accordion">
-                            <div class="accordion" id="accordionExample">
-                                <div class="card">
-                                    <div class="card-heading">
-                                        <a data-toggle="collapse" data-target="#collapseOne">Categories</a>
-                                    </div>
-
-                                    <div id="collapseOne" class="collapse show" data-parent="#accordionExample">
-                                        <div class="card-body">
-                                            <div class="shop__sidebar__categories">
-                                                <ul class="nice-scroll">
-                                                    <% categories.forEach(function(category) { %>
-                                                        <li>
-                                                            <a href="#" class="category-filter"
-                                                                data-category="<%= category.name %>">
-                                                                <%= category.name %>
-                                                            </a>
-                                                        </li>
-                                                        <% }) %>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="card">
-                                    <div class="card-heading">
-                                        <a data-toggle="collapse" data-target="#collapseTwo">Branding</a>
-                                    </div>
-                                    <div id="collapseTwo" class="collapse show" data-parent="#accordionExample">
-                                        <div class="card-body">
-                                            <div class="shop__sidebar__brand">
-                                                <ul>
-                                                    <li><a href="#">Louis Vuitton</a></li>
-                                                    <li><a href="#">Chanel</a></li>
-                                                    <li><a href="#">Hermes</a></li>
-                                                    <li><a href="#">Gucci</a></li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+<!-- Shop Section Begin -->
+<section class="shop spad">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-3 col-md-4 col-sm-12" style="margin-bottom: 20px;">
+                <div class="shop__sidebar">
+                    <div class="shop__sidebar__search" style="margin-bottom: 20px;">
+                        <form id="searchForm" action="#" style="display: flex; align-items: center;">
+                            <input type="text" id="searchInput" placeholder="Search..." class="search-input"
+                                style="width: 100%; padding: 10px; border: 2px solid #000000; border-radius: 5px; background-color: #000000; font-size: 16px; transition: border-color 0.3s;">
+                            <button type="submit" class="search-button" style="background-color: #000000; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; margin-left: 5px; transition: background-color 0.3s;">
+                                <span class="icon_search"></span>
+                            </button>
+                        </form>
                     </div>
-                </div>
-                <div class="col-lg-9">
-                    <div class="shop__product__option">
-                        <div class="row">
-                            <div class="col-lg-6 col-md-6 col-sm-6">
-                                <div class="shop__product__option__left">
+                    <div class="shop__sidebar__accordion">
+                        <div class="accordion" id="accordionExample">
+                            <div class="card">
+                                <div class="card-heading">
+                                    <a data-toggle="collapse" data-target="#collapseOne">Categories</a>
                                 </div>
-                            </div>
-                            <div class="col-lg-6 col-md-6 col-sm-6">
-                                <div class="shop__product__option__right">
-                                    <p>Sort by:</p>
-                                    <select id="sortSelect">
-                                        <option value="popularity">Popularity</option>
-                                        <option value="price_asc">Price: Low to High</option>
-                                        <option value="price_desc">Price: High to Low</option>
-                                        <option value="avg_rating">Average Rating</option>
-                                        <option value="featured">Featured</option>
-                                        <option value="new_arrivals">New Arrivals</option>
-                                        <option value="az">A-Z</option>
-                                        <option value="za">Z-A</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row" id="productContainer">
-                        <% products.forEach(function(product) { %>
-                            <div class="col-lg-4 col-md-6 col-sm-6">
-                                <div class="product__item">
-
-                                    <div class="product__item__pic set-bg"
-                                        data-setbg="assets/products/<%= product.image %>">
-                                        <a href="/product/<%= product._id %>"><img
-                                                src="/uploads/<%= product.images[0] %>" alt=""></a>
-                                        <% if (product.offer) { %> <!-- Check if there's an offer -->
-                                            <span class="offer-tag">
-                                                <%= product.offer.discountPercentage %>% Off
-                                            </span>
-                                            <!-- Offer percentage -->
-                                            <% } %>
-                                                <ul class="product__hover">
+                                <div id="collapseOne" class="collapse show" data-parent="#accordionExample">
+                                    <div class="card-body">
+                                        <div class="shop__sidebar__categories">
+                                            <ul class="nice-scroll">
+                                                <% categories.forEach(function(category) { %>
                                                     <li>
-                                                        <a href="#" class="wishlist-btn"
-                                                            data-product-id="<%= product._id %>">
-                                                            <img src="img/icon/<%= wishlist.includes(product._id) ? 'filled-heart.png' : 'heart.png' %>"
-                                                                alt="Add to wishlist" class="heart-icon">
+                                                        <a href="#" class="category-filter " style="color: black;" data-category="<%= category.name %>">
+                                                            <%= category.name %>
                                                         </a>
                                                     </li>
-                                                </ul>
-                                    </div>
-
-                                    <div class="product__item__text">
-                                        <h6>
-                                            <%= product.name %>
-                                        </h6>
-                                        <a class="add-cart" onclick="Addtocart('<%= product._id %>')" >+ Add To Cart</a>
-
-                                        <h5>
-                                            <% if (product.offerPrice !==null) { %>
-                                                <small style="text-decoration: line-through; opacity: 70%;">₹<%=
-                                                        product.price %>
-                                                </small>
-                                                <span style="padding-left: 7px;"> ₹<%= product.offerPrice.toFixed(2) %>
-                                                </span>
-                                                <% } else { %>
-                                                    ₹<%= product.price %>
-                                                        <% } %>
-                                        </h5>
-                                        <div class="product__color__select">
-                                            <span>Stock:</span>
-                                            <% if (product.stock===0) { %>
-                                                <span style="color: red;">Out of Stock</span>
-                                                <% } else if (product.stock> 0 && product.stock < 10) { %>
-                                                        <span style="color: orange;">Limited Stock</span>
-                                                        <% } else { %>
-                                                            <span style="color: green;">Available</span>
-                                                            <% } %>
+                                                <% }) %>
+                                            </ul>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <% }); %>
+                            <div class="card">
+                            </div>
+                        </div>
                     </div>
+                </div>
+            </div>
+            <div class="col-lg-9 col-md-8 col-sm-12">
+                <div class="shop__product__option" style="margin-bottom: 20px;">
+                    <div class="row">
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                            <div class="shop__product__option__left">
+                                <!-- Placeholder for additional options if needed -->
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                            <div class="shop__product__option__right">
+                                <p>Sort by:</p>
+                                <select id="sortSelect" style="padding: 10px; border: 1px solid #000000; border-radius: 5px;">
+                                    <option value="popularity">Popularity</option>
+                                    <option value="price_asc">Price: Low to High</option>
+                                    <option value="price_desc">Price: High to Low</option>
+                                    <option value="avg_rating">Average Rating</option>
+                                    <option value="featured">Featured</option>
+                                    <option value="new_arrivals">New Arrivals</option>
+                                    <option value="az">A-Z</option>
+                                    <option value="za">Z-A</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" id="productContainer">
+                    <% products.forEach(function(product) { %>
+                        <div class="col-lg-4 col-md-6 col-sm-12">
+                            <div class="product__item">
+                                <div class="product__item__pic set-bg" data-setbg="assets/products/<%= product.image %>">
+                                    <a href="/product/<%= product._id %>"><img src="/uploads/<%= product.images[0] %>" alt=""></a>
+                                    <% if (product.offer) { %>
+                                        <span class="offer-tag" style="position: absolute; top: 5px; left: 10px; background-color: red; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: bold; z-index: 10;">
+                                            <%= product.offer.discountPercentage %>% Off
+                                        </span>
+                                    <% } %>
+                                    <ul class="product__hover">
+                                        <li>
+                                            <a href="#" class="wishlist-btn" data-product-id="<%= product._id %>">
+                                                <img src="img/icon/<%= wishlist.includes(product._id) ? 'filled-heart.png' : 'heart.png' %>" alt="Add to wishlist" class="heart-icon">
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
 
-                  
+                                <div class="product__item__text">
+                                    <h6><%= product.name %></h6>
+                                    <a class="add-cart" onclick="Addtocart('<%= product._id %>')">+ Add To Cart</a>
+
+                                    <h5>
+                                        <% if (product.offerPrice !== null) { %>
+                                            <small style="text-decoration: line-through; opacity: 70%;">₹<%= product.price %></small>
+                                            <span style="padding-left: 7px;"> ₹<%= product.offerPrice.toFixed(2) %></span>
+                                        <% } else { %>
+                                            ₹<%= product.price %>
+                                        <% } %>
+                                    </h5>
+                                    <div class="product__color__select">
+                                        <span>Stock:</span>
+                                        <% if (product.stock === 0) { %>
+                                            <span style="color: red;">Out of Stock</span>
+                                        <% } else if (product.stock > 0 && product.stock < 10) { %>
+                                            <span style="color: orange;">Limited Stock</span>
+                                        <% } else { %>
+                                            <span style="color: green;">Available</span>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
                 </div>
             </div>
         </div>
-    </section>
-    <!-- Shop Section End -->
+    </div>
+</section>
+<!-- Shop Section End -->
 
-    <%- include('footer') %>
+<%- include('footer') %>
+
 
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>

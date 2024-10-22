@@ -38,40 +38,59 @@
 
         <!-- Product Section -->
         <!-- Product Section -->
-<div class="card mb-4" style="border-color: black;">
-    <div class="card-header" style="background-color: black;">
-        <h5 style="color: aliceblue;">Products</h5>
-    </div>
-    <div class="card-body">
-        <ul class="list-unstyled">
-            <% if (order.products && order.products.length > 0) { %>
-                <% order.products.forEach(item => { %>
-                    <li class="d-flex align-items-center border-bottom pb-2 mb-2">
-                        <img src="/uploads/<%= item.product.images[0] || '/images/default-product.jpg' %>"
-                            alt="<%= item.product.name || 'Product Image' %>" class="img-fluid"
-                            style="max-width: 80px; margin-right: 15px;">
-                        <div>
-                            <strong>
-                                <%= item.product.name || 'Product Name' %>
-                            </strong><br>
-                            ₹<%= (item.price || 0).toFixed(2) %> x <%= item.quantity || 1 %> = ₹<%=
-                                    ((item.quantity || 1) * (item.price || 0)).toFixed(2) %>
-                            <% if (returnedProductMap[item.product._id]) { %>
-                                <span class="badge badge-warning">
-                                    Returned: <%= returnedProductMap[item.product._id] %>
-                                </span>
-                            <% } %>
-                        </div>
-                    </li>
-                <% }) %>
-            <% } else { %>
-                <li>No products in this order.</li>
-            <% } %>
-        </ul>
-        <div class="text-right font-weight-bold">Total: ₹<%= order.totalPrice ? order.totalPrice.toFixed(2) : '100.00' %>
+        <div class="card mb-4" style="border-color: black;">
+            <div class="card-header" style="background-color: black;">
+                <h5 style="color: aliceblue;">Products</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <% if (order.products && order.products.length > 0) { %>
+                        <% order.products.forEach(item => { %>
+                            <li class="d-flex align-items-center border-bottom pb-2 mb-2">
+                                <img src="/uploads/<%= item.product.images[0] || '/images/default-product.jpg' %>"
+                                    alt="<%= item.product.name || 'Product Image' %>" class="img-fluid"
+                                    style="max-width: 80px; margin-right: 15px;">
+                                <div class="flex-grow-1">
+                                    <strong>
+                                        <%= item.product.name || 'Product Name' %>
+                                    </strong><br>
+                                    ₹<%= (item.price || 0).toFixed(2) %> x <%= item.quantity || 1 %> = ₹<%=
+                                                ((item.quantity || 1) * (item.price || 0)).toFixed(2) %>
+                                </div>
+                                <% if (returnedProductMap[item.product._id]) { %>
+                                    <div class="ml-3">
+                                        Return status:
+                                        <% 
+                                            const status = returnedProductMap[item.product._id].status; 
+                                            let badgeClass; 
+                                
+                                            // Determine the badge class based on the status
+                                            if (status === 'requested') {
+                                                badgeClass = 'badge-warning';
+                                            } else if (status === 'approved') {
+                                                badgeClass = 'badge-success'; 
+                                            } else if (status === 'rejected') {
+                                                badgeClass = 'badge-danger'; 
+                                            } else {
+                                                badgeClass = 'badge-info'; 
+                                            }
+                                        %>
+                                        <span class="badge <%= badgeClass %>">
+                                            <%= status %>
+                                        </span>
+                                    </div>
+                                <% } %>
+                                
+                            </li>
+                        <% }) %>
+                    <% } else { %>
+                        <li>No products in this order.</li>
+                    <% } %>
+                </ul>
+                <div class="text-right font-weight-bold">Total: ₹<%= order.totalPrice ? order.totalPrice.toFixed(2) : '100.00' %></div>
+            </div>
+            
         </div>
-    </div>
-</div>
 
 
         <!-- Delivery Section -->
@@ -206,47 +225,57 @@
     <!-- Return Order Modal -->
     <div class="modal fade" id="returnOrderModal" tabindex="-1" role="dialog" aria-labelledby="returnOrderModalLabel"
         aria-hidden="true" style="color: #333; font-family: Arial, sans-serif;">
-        <div class="modal-dialog" role="document" style="max-width: 600px;">
-            <div class="modal-content" style="border-radius: 8px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);">
-                <div class="modal-header"
-                    style="background-color: #f8f9fa; border-bottom: 2px solid #ffcc00; padding: 15px;">
-                    <h5 class="modal-title" id="returnOrderModalLabel" style="font-weight: bold;">Return Order</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"
-                        style="font-size: 24px; opacity: 0.8;">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body border"
-                    style="padding: 20px; border: 1px solid #ffcc00; background-color: #fff; border-radius: 0 0 8px 8px;">
-                    <label for="returnReason" style="font-weight: bold; font-size: 14px;">Reason for Return:</label>
-                    <textarea id="returnReason" class="form-control" rows="3"
-                        style="resize: none; border-radius: 4px; border: 1px solid #ddd; padding: 10px;"></textarea>
+    <div class="modal-dialog" role="document" style="max-width: 600px;">
+        <div class="modal-content" style="border-radius: 8px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);">
+            <div class="modal-header"
+                style="background-color: #f8f9fa; border-bottom: 2px solid #ffcc00; padding: 15px;">
+                <h5 class="modal-title" id="returnOrderModalLabel" style="font-weight: bold;">Return Order</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+                    style="font-size: 24px; opacity: 0.8;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body border"
+                style="padding: 20px; border: 1px solid #ffcc00; background-color: #fff; border-radius: 0 0 8px 8px;">
+                <label for="returnReason" style="font-weight: bold; font-size: 14px;">Reason for Return:</label>
+                <textarea id="returnReason" class="form-control" rows="3"
+                    style="resize: none; border-radius: 4px; border: 1px solid #ddd; padding: 10px;"></textarea>
 
-                    <h5 class="mt-4" style="color: #ff8800;">Select Products to Return</h5>
-                    <form id="returnProductsForm">
-                        <% order.products.forEach((item, index)=> { %>
+                <h5 class="mt-4" style="color: #ff8800;">Select Products to Return</h5>
+                <form id="returnProductsForm">
+                    <% order.products.forEach((item, index) => { 
+                        const productId = item.product._id.toString();
+                        // Check if the product is not in the returnedProductMap
+                        if (!returnedProductMap[productId]) { %>
                             <div class="form-check" style="margin-bottom: 10px;">
-                                <input class="form-check-input" type="checkbox" value="<%= item.product._id %>"
+                                <input class="form-check-input" type="checkbox" value="<%= productId %>"
                                     id="productCheck<%= index %>" name="selectedProducts" style="margin-top: 0.5rem;">
                                 <label class="form-check-label" for="productCheck<%= index %>"
                                     style="margin-left: 8px;">
                                     <%= item.product.name %> - ₹<%= item.price %> (Quantity: <%= item.quantity %>)
                                 </label>
                             </div>
-                            <% }); %>
-                    </form>
-                </div>
-                <div class="modal-footer" style="border-top: none; padding: 15px 20px; background-color: #f8f9fa;">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal"
-                        style="background-color: #6c757d; color: white; border-radius: 4px;">Close</button>
-                    <button type="button" class="btn btn-warning" id="confirmReturnBtn"
-                        onclick="submitReturnRequest('<%= order._id %>')"
-                        style="background-color: #ffcc00; color: #fff; border-radius: 4px;">Submit Return
-                        Request</button>
-                </div>
+                    <% } else { %>
+                            <!-- Display that the product is already returned -->
+                            <p class="text-muted"><%= item.product.name %> </p>
+                    <% } 
+                    }); %>
+                </form>
+            </div>
+            <div class="modal-footer" style="border-top: none; padding: 15px 20px; background-color: #f8f9fa;">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                    style="background-color: #6c757d; color: white; border-radius: 4px;">Close</button>
+                <button type="button" class="btn btn-warning" id="confirmReturnBtn"
+                    onclick="submitReturnRequest('<%= order._id %>')"
+                    style="background-color: #ffcc00; color: #fff; border-radius: 4px;">Submit Return
+                    Request</button>
             </div>
         </div>
     </div>
+</div>
+
+
+
 
 
 

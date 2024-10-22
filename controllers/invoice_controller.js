@@ -31,11 +31,20 @@ const generateInvoice = async (req, res) => {
         // Shortened order ID for display purposes
         const pageOrderId = orderData._id.toString().substring(0, 8);
 
-        // Map the products to the required format
+        // Calculate total price of all products
+        const productTotal = orderData.products.reduce((total, item) => {
+            return total + (item.quantity * item.price);
+        }, 0);
+
+        // Apply coupon discount if present
+        const discount = orderData.couponDiscound || 0; // Assuming couponDiscount field exists in the order
+        const totalPriceAfterDiscount = productTotal - discount;
+
+        // Map the products to the required format for invoice
         const products = orderData.products.map(item => ({
             quantity: item.quantity,
             description: item.product.name,
-            price: item.price // Ensure that price or sale price is used correctly
+            price: item.price, // Ensure that price or sale price is used correctly
         }));
 
         // Prepare invoice data
@@ -64,9 +73,14 @@ const generateInvoice = async (req, res) => {
                 date: formatConvertedDate,
             },
             products, // Product list for the invoice
+            bottomNotice: discount > 0 ? `Coupon discount applied: ₹${discount}` : '',
             settings: {
                 currency: "INR",
-            }
+            },
+            // Adding subtotal and total calculation here
+            subtotal: productTotal.toFixed(2), // Subtotal without discount
+            discount: discount.toFixed(2), // Discount applied
+            total: totalPriceAfterDiscount.toFixed(2), // Total price after applying discount
         };
 
         console.log("Generated Invoice Data:", data);

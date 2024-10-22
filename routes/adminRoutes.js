@@ -67,6 +67,7 @@ router.post('/toggleOfferStatus/:offerId',ensureAdmin,offerController.toggleOffe
 router.get('/Orders',ensureAdmin, orderController.adOrderLoad)
 router.get('/orders/:id',ensureAdmin,orderController.adOrderDetails)
 router.post('/update-order/:orderId',ensureAdmin, orderController.updateOrder)
+router.post('/api/return-request',orderController.returnReq)
 
 router.get('/sales-report',ensureAdmin,adminController.loadSalesReport)
 router.post('/sales-report',ensureAdmin,adminController.SalesReport)
