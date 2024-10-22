@@ -9,7 +9,7 @@ const couponSchema = new mongoose.Schema({
         type: Number,
         required: true,
         min: 1,
-        max: 100 
+        max: 100
     },
     couponCode: {
         type: String,
@@ -19,18 +19,15 @@ const couponSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    maxredeemAmount:{
-        type:Number,
-        required:true
+    maxredeemAmount: {
+        type: Number,
+        required: true
     },
     expires: {
         type: Date,
         required: true
     },
-    status: {
-        type: Boolean,
-        required: true
-    },
+    status: { type: Boolean, default: true },
     userList: [{
         userId: {
             type: mongoose.Schema.Types.ObjectId,

@@ -1,5 +1,67 @@
 <%- include('header') %>
+<style>
+    .hero__items {
+        background-size: cover; /* Ensures the background image covers the entire div */
+        background-position: center; /* Centers the image */
+        
+    }
 
+    .hero__text h6 {
+        font-size: 1.5rem; /* Adjust font size */
+        margin-bottom: 0.5rem; /* Space below */
+    }
+
+    .hero__text h2 {
+        font-size: 2rem; /* Adjust font size */
+        margin-bottom: 1rem; /* Space below */
+    }
+
+    .hero__text p {
+        font-size: 1rem; /* Adjust font size */
+        margin-bottom: 1rem; /* Space below */
+    }
+
+    .hero__social a {
+        font-size: 1.2rem; /* Social icons size */
+    }
+
+    @media (max-width: 768px) {
+        .primary-btn{
+            font-size: 10px;
+            padding: 6px 8px;
+            letter-spacing: 1;
+
+        }
+        .hero__items {
+        height: 350px;
+        }
+        .hero__text {
+            padding: 0px; /* Add padding for smaller devices */
+            text-align: start; /* Center text on small screens */
+        }
+
+        .hero__text h6 {
+            font-size: 1.1rem; /* Smaller heading for mobile */
+        }
+
+        .hero__text h2 {
+            font-size: 1.8rem; /* Smaller heading for mobile */
+            line-height:35px;
+        }
+
+        .hero__text p {
+            font-size: 0.5rem; /* Smaller paragraph for mobile */
+            line-height:12px;
+
+        }
+       .arrow_left ,.arrow_right {
+        display: none;
+       }
+        .hero__social {
+           display: none; /* Space above social icons */
+        }
+    }
+</style>
     <!-- Hero Section Begin -->
     <section class="hero">
         <div class="hero__slider owl-carousel">
@@ -27,13 +89,12 @@
                 <div class="container">
                     <div class="row">
                         <div class="col-xl-5 col-lg-7 col-md-8">
-                            <div class="heros__text">
+                            <div class="hero__text">
                                 <h6>Summer Collection </h6>
                                 <h2>Fall - Winter Collections 2030</h2>
-                                <p>A specialist label creating luxury essentials. Ethically crafted with an unwavering
-                                commitment to exceptional quality.</p>
+                                <p>A specialist label creating luxury essentials. Ethically crafted with an unwavering commitment to exceptional quality.</p>
                                 <a href="/product/6704d46d9549e95687630ad0" class="primary-btn">Shop now <span class="arrow_right"></span></a>
-                                <div class="heros__social">
+                                <div class="hero__social">
                                     <a href="#"><i class="fa fa-facebook"></i></a>
                                     <a href="#"><i class="fa fa-twitter"></i></a>
                                     <a href="#"><i class="fa fa-pinterest"></i></a>
@@ -107,7 +168,7 @@
                 <div class="col-lg-3 col-md-6 col-sm-6 mix <%= product.category %>">
                     <div class="product__item">
                         <div class="product__item__pic">
-                            <img src="/uploads/<%= product.images[0] %>" alt="<%= product.name %>" class="img-fluid" />
+                           <a href="/product/<%= product._id %>"><img src="/uploads/<%= product.images[0] %>" alt="<%= product.name %>"  class="img-fluid" /></a> 
                             <% if (product.isNew) { %>
                                 <span class="label">New</span>
                             <% } %>
@@ -117,7 +178,7 @@
                         </div>
                         <div class="product__item__text">
                             <h6><%= product.name %></h6>
-                            <a href="#" class="add-cart">+ Add To Cart</a>
+                            <a href="#" class="add-cart" onclick="Addtocart('<%= product._id %>')">+ Add To Cart</a>
                             <h5>₹<%= product.price %></h5>
                         </div>
                     </div>
@@ -149,10 +210,64 @@
     </div>
 </section>
 
-
-
-
     <%- include('footer') %>
+    <script>
+        function Addtocart(productId) {
+                    event.preventDefault();
+                    const quantity = 1;
+                    fetch('/add-to-cart', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            productId: productId,
+                            quantity: quantity
+                        })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Product added to cart, show success SweetAlert
+                                Swal.fire({
+                                    title: 'Product Added to Cart!',
+                                    text: "Do you want to view your cart or continue shopping?",
+                                    icon: 'success',
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Go to Cart',
+                                    cancelButtonText: 'Continue Shopping'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        window.location.href = '/cart'; // Redirect to cart page
+                                    }
+                                });
+                            } else {
+                                // Check if the failure is due to user not being logged in
+                                if (data.message == 'User not logged in') {
+                                    Swal.fire({
+                                        title: 'Not Logged In',
+                                        text: "You need to log in to add products to your cart.",
+                                        icon: 'warning',
+                                        showCancelButton: true,
+                                        confirmButtonText: 'Log In',
+                                        cancelButtonText: 'Cancel'
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            window.location.href = '/login'; // Redirect to login page
+                                        }
+                                    });
+                                } else if (data.message == 'Product Out of stock') {
+                                    // Show an Out of Stock message using Toastr
+                               
+                                    toastr.warning('This product is currently out of stock.');
+                                } else {
+                                    Swal.fire('Error', 'Failed to add the product to the cart. Please try again.', 'error');
+                                }
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                };
+    </script>
 
 
  

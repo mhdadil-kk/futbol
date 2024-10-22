@@ -754,26 +754,23 @@
 
 
         function logout() {
-            Swal.fire({
-                title: "Are you sure?",
-                text: "You will be logged out of your account!",
-                icon: "warning",
-                buttons: true,
-                dangerMode: true,
-            })
-                .then((willLogout) => {
-                    if (willLogout) {
-                        // Replace with your logout logic here
-                        // For example, redirecting to the logout route
-                        window.location.href = '/logout'; // Update with your logout URL
-                        Swal.fire("Logged out successfully!", {
-                            icon: "success",
-                        });
-                    } else {
-                        swal("You are still logged in!");
-                    }
-                });
+    Swal.fire({
+        title: "Are you sure?",
+        text: "You will be logged out of your account!",
+        icon: "warning",
+        showCancelButton: true, // Shows a cancel button
+        confirmButtonColor: "#3085d6", // Customize confirm button color
+        cancelButtonColor: "#d33", // Customize cancel button color
+        confirmButtonText: "Yes, log me out!", // Customize confirm button text
+        cancelButtonText: "No, stay logged in" // Customize cancel button text
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Replace with your logout logic here
+            // For example, redirecting to the logout route
+            window.location.href = '/logout'; // Update with your logout URL
         }
+    });
+}
 
 
     </script>

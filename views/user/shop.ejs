@@ -1,5 +1,79 @@
 <%- include('header') %>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+<style>
+    /* Style for small screens */
+    @media (max-width: 768px) {
+        /* Flexbox layout for product items */
+        .product__item {
+            display: flex;
+            flex-direction: row; /* Align items in a row */
+            align-items: flex-start; /* Align items to the start */
+            margin-bottom: 5px; /* Small distance between each product */
+            height: 100%; /* Allow height to adjust based on content */
+        }
+
+        /* Adjust the product image to take up a portion of the container */
+        .product__item__pic {
+            width: 60%; 
+            position: relative; 
+            margin-right: 10px; 
+        }
+
+        /* Adjust image responsiveness */
+        .product__item__pic img {
+            width: 100%; /* Full width of the container */
+            height: auto; /* Maintain aspect ratio */
+        }
+
+        /* Wishlist icon at the top right corner of the product image */
+        .product__hover {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: block; /* Ensure it's always visible */
+        }
+
+        /* Adjust product details to take up the remaining width */
+        .product__item__text {
+            width: 60%; /* Details take the remaining 60% */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; /* Align product details to the top */
+            text-align: left; /* Align text to the left */
+        }
+
+        /* Adjust product name size */
+        .product__item__text h6 {
+            font-size: 14px; /* Adjust the product name size */
+            margin-bottom: 5px; /* Reduce spacing below the product name */
+        }
+
+        /* Adjust the price styling */
+        .product__item__text h5 {
+            font-size: 14px; /* Decrease the font size for price */
+            margin-bottom: 10px; /* Add margin to separate from the cart button and stock */
+        }
+
+        /* Always show Add to Cart button below the price */
+        .add-cart {
+            display: inline-block;
+            font-size: 12px; /* Reduce font size for add to cart */
+            padding: 2px 2px; /* Adjust padding */
+            background-color: #f5f5f5; /* Make button stand out */
+            border: 1px solid #000;
+            border-radius: 5px;
+            margin-top: 75px;
+            cursor: pointer;
+        }
+
+        /* Stock information */
+        .product__color__select {
+            margin-top: 10px; /* Add space between price and stock info */
+            font-size: 12px; /* Reduce font size for stock information */
+            color: #333; /* Make stock information more readable */
+        }
+    }
+</style>
 
 <!-- Breadcrumb Section Begin -->
 <section class="breadcrumb-option" style="height: auto;">
@@ -94,7 +168,7 @@
                                 <div class="product__item__pic set-bg" data-setbg="assets/products/<%= product.image %>">
                                     <a href="/product/<%= product._id %>"><img src="/uploads/<%= product.images[0] %>" alt=""></a>
                                     <% if (product.offer) { %>
-                                        <span class="offer-tag" style="position: absolute; top: 5px; left: 10px; background-color: red; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: bold; z-index: 10;">
+                                        <span class="offer-tag" style="position: absolute; top: 5px; left: 10px; background-color: rgb(198, 22, 22); color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: bold; z-index: 10;">
                                             <%= product.offer.discountPercentage %>% Off
                                         </span>
                                     <% } %>

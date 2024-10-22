@@ -48,30 +48,30 @@ const addCoupon = async (req, res) => {
 
 
 // Edit Coupon function
-const editCoupon = async (req, res) => {
+// Toggle Coupon Status function
+const toggleCouponStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, percentage, couponCode, minimumAmount, maxredeemAmount, expires, status } = req.body;
 
-        const updatedCoupon = await Coupon.findByIdAndUpdate(id, {
-            name,
-            percentage,
-            couponCode,
-            minimumAmount,
-            maxredeemAmount,
-            expires: new Date(expires),
-            status,
-        }, { new: true });
+        // Find the coupon by ID
+        const coupon = await Coupon.findById(id);
 
-        if (!updatedCoupon) {
-            return res.status(404).json({ error: 'Coupon not found' });
+        if (!coupon) {
+            return res.status(404).json({ success: false, message: 'Coupon not found' });
         }
 
-        res.status(200).json(updatedCoupon);
+        // Toggle the status
+        coupon.status = !coupon.status;
+        const updatedCoupon = await coupon.save(); // Save the updated coupon
 
+        res.status(200).json({
+            success: true,
+            data: updatedCoupon,
+            message: `Coupon status updated to ${updatedCoupon.status ? 'Active' : 'Inactive'}`,
+        });
     } catch (error) {
-        console.error('Error updating coupon:', error);
-        res.status(500).json({ error: 'Failed to update coupon. Please try again.' });
+        console.error('Error toggling coupon status:', error);
+        res.status(500).json({ success: false, message: 'Failed to update coupon status. Please try again.' });
     }
 };
 
@@ -83,14 +83,14 @@ const deleteCoupon = async (req, res) => {
         const deletedCoupon = await Coupon.findByIdAndDelete(id);
 
         if (!deletedCoupon) {
-            return res.status(404).json({ error: 'Coupon not found' });
+            return res.status(404).json({ success:false, error: 'Coupon not found' });
         }
 
-        res.status(200).json({ message: 'Coupon deleted successfully' });
+        res.status(200).json({ success:true , message: 'Coupon deleted successfully' });
 
     } catch (error) {
         console.error('Error deleting coupon:', error);
-        res.status(500).json({ error: 'Failed to delete coupon. Please try again.' });
+        res.status(500).json({ success :false, error: 'Failed to delete coupon. Please try again.' });
     }
 };
 
@@ -171,7 +171,7 @@ const applyCoupon = async (req, res) => {
 module.exports = {
     CouponPageLoad,
     addCoupon,
-    editCoupon,
     deleteCoupon,
+    toggleCouponStatus,
     applyCoupon
 };

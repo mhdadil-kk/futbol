@@ -53,7 +53,8 @@ router.get('/Users',ensureAdmin,adminController.loadUserList)
 
 router.get('/coupons',ensureAdmin,couponController.CouponPageLoad)
 router.post('/addcoupon',ensureAdmin,couponController.addCoupon)
-router.post('/editcoupon/:id',ensureAdmin,couponController.editCoupon);
+router.post('/togglecouponstatus/:id', couponController.toggleCouponStatus);
+
 router.post('/deletecoupon/:id',ensureAdmin, couponController.deleteCoupon);
 
 router.get('/offers',ensureAdmin,offerController.loadOfferPage)
