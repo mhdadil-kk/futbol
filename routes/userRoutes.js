@@ -41,9 +41,7 @@ router.post('/reset-password', userController.resetPassword);
 router.get('/profile', ensureAuthenticated,userController.loadProfile);
 router.post('/update-profile', userController.updateProfile);
 router.get('/shop',userController.loadShop)
-router.get('/api/products', userController.loadAdvancedSearch);
-router.get('/api/products/search',userController.search)
-router.get('/api/products/category',userController.filterByCategory)
+router.get('/api/products', userController.loadProducts);
 
 router.get('/product/:id',userController.loadProductDetails);
 router.post('/add_address' ,ensureAuthenticated,userController.addAddress)

@@ -6,14 +6,41 @@ const path = require('path');
 
 const loadProducts = async (req, res) => {
     try {
-        const products = await Product.find({})
-        
-        res.render('admin/page-products-grid', {products })
+        const page = parseInt(req.query.page) || 1; // Get the page number from the query
+        const limit = 10; // Set the limit for products per page
+        const skip = (page - 1) * limit; // Calculate the number of products to skip
 
+        const products = await Product.find({}).skip(skip).limit(limit); // Fetch the products
+        const totalProducts = await Product.countDocuments({}); // Count total products for pagination
+        const totalPages = Math.ceil(totalProducts / limit); // Calculate total pages
+
+        res.render('admin/page-products-grid', { products, totalPages, currentPage: page }); // Pass current page
     } catch (error) {
-     console.log(error)
+        console.log(error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
-}
+};
+
+
+
+const loadProductsWithPagination = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1; // Get the page number from the query
+        const limit = 10; // Set the limit for products per page
+        const skip = (page - 1) * limit; // Calculate the number of products to skip
+
+        const products = await Product.find({}).skip(skip).limit(limit); // Fetch the products
+        const totalProducts = await Product.countDocuments({}); // Count total products for pagination
+        const totalPages = Math.ceil(totalProducts / limit); // Calculate total pages
+
+        res.json({ products, totalPages }); // Send the products and total pages as JSON
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
+
 
 
 const loadaddProduct = async (req, res) => {
@@ -172,7 +199,7 @@ module.exports = {
     addProduct,
     loadeditProduct,
     editProduct,
-    productBlock
-
+    productBlock,
+    loadProductsWithPagination
 }
 

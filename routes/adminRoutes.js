@@ -38,6 +38,8 @@ router.get('/api/monthly-sales',adminController.monthlySales)
 router.get('/api/yearly-sales',adminController.yearlysales)
 
 router.get('/products',ensureAdmin,productController.loadProducts)
+router.get('/load-products', productController.loadProductsWithPagination);
+
 router.get('/addproducts',ensureAdmin,productController.loadaddProduct)
 router.post('/addproducts', upload.array('images', 4), productController.addProduct);
 router.get('/editProduct/:id',ensureAdmin, productController.loadeditProduct)

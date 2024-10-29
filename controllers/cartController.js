@@ -115,13 +115,11 @@ const addToCart = async (req, res) => {
                 }
 
                 const quantityToAdd = newQuantity - existingCart.products[productIndex].quantity;
-                product.stock -= quantityToAdd;
                 existingCart.products[productIndex].quantity = newQuantity;
                 existingCart.products[productIndex].product_total = newQuantity * product.price;
             } else {
                 let newQuantity = Math.min(quantity, product.stock, MAX_QTY_PER_USER);
                 
-                product.stock -= newQuantity;
                 existingCart.products.push({ product: productId, quantity: newQuantity, product_total: newQuantity * product.price });
             }
 
@@ -133,7 +131,6 @@ const addToCart = async (req, res) => {
             let newQuantity = Math.min(quantity, product.stock, MAX_QTY_PER_USER);
             
             // Update stock
-            product.stock -= newQuantity;
             const newCart = new Cart({
                 user: userId,
                 products: [{ product: productId, quantity: newQuantity, product_total: newQuantity * product.price }],
@@ -177,7 +174,6 @@ const removeProduct = async (req, res) => {
             const product = await Product.findById(productId);
             if (product) {
                 // Increase the stock based on the quantity removed
-                product.stock += quantityToRemove;
                 await product.save(); // Save the updated product stock
             }
 
@@ -244,6 +240,8 @@ const updateCart = async (req, res) => {
                 const MAX_QTY_PER_USER = 5;
                 if (newQuantity > product.stock) {
                     newQuantity = product.stock;
+                    return res.json({ success: false, message: 'Not enough stock available' });
+
                 }
                 if (newQuantity > MAX_QTY_PER_USER) {
                     return res.json({ success: false, message: `Maximum quantity per product is ${MAX_QTY_PER_USER}` });
@@ -258,9 +256,6 @@ const updateCart = async (req, res) => {
                     if (product.stock < stockChange) {
                         return res.json({ success: false, message: 'Not enough stock available' });
                     }
-                    product.stock -= stockChange;
-                } else if (newQuantity < previousQuantity) {
-                    product.stock += (previousQuantity - newQuantity);
                 }
 
                 // Update cart

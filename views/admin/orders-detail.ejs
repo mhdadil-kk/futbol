@@ -142,109 +142,143 @@
             <!-- row // -->
 
             <!-- Table for order products -->
-            <div class="row">
-                <div class="col-lg-12"> <!-- Changed col-lg-7 to col-lg-12 for full width -->
-                    <div class="table-responsive">
-                        <table class="table table-bordered w-100"> <!-- Added w-100 class for full width -->
-                            <thead class="thead-light">
-                                <tr>
-                                    <th width="40%">Product</th>
-                                    <th width="20%">Unit Price</th>
-                                    <th width="20%">Quantity</th>
-                                    <th width="10%">Return Status</th>
-                                    <th width="10%">Return Reason</th>
-                                    <th width="10%" class="text-end">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% if (order.products && order.products.length > 0) { %>
-                                    <% order.products.forEach(item => { %>
-                                        <tr class="product-row">
-                                            <td>
-                                                <a class="itemside d-flex align-items-center" href="#">
-                                                    <div class="left">
-                                                        <img src="/uploads/<%= item.product.images[0] %>" width="40" height="40" class="img-xs" alt="Item" />
-                                                    </div>
-                                                    <div class="info ms-2">
-                                                        <%= item.product ? item.product.name : 'No Product Name' %>
-                                                    </div>
-                                                </a>
-                                            </td>
-                                            <td>₹<%= item.price.toFixed(2) %></td>
-                                            <td><%= item.quantity %></td>
+            <div class="card-body">
+                <!-- Existing content for customer, order info, and delivery address -->
+            
+                <!-- Coupon Details -->
+                <% if (order.coupon) { %>
+                    <div class="row mb-4">
+                        <div class="col-12 text-end">
+                            <h4 style="padding-bottom: 5px;">Coupon Applied<i class="icon material-icons md-local_offer"></i></h4>
 
-                                            <!-- Return Status and Actions -->
-                                            <td style="padding-right: 30px; padding-bottom: 15px;">
-                                                <% if (returnedProductMap[item.product._id]) { %>
-                                                    <div class="d-flex justify-content-between align-items-center">
-                                                        <span class="badge 
-                                                            <%= returnedProductMap[item.product._id].status === 'requested' ? 'bg-warning' : '' %>
-                                                            <%= returnedProductMap[item.product._id].status === 'approved' ? 'bg-info' : '' %>
-                                                            <%= returnedProductMap[item.product._id].status === 'rejected' ? 'bg-danger' : '' %>
-                                                            <%= returnedProductMap[item.product._id].status === 'returned' ? 'bg-success' : '' %>">
-                                                            <%= returnedProductMap[item.product._id].status %>
-                                                        </span>
-                                                        <% if (returnedProductMap[item.product._id].status === 'requested' || returnedProductMap[item.product._id].status === 'approved') { %>
-                                                            <div class="dropdown" style="position: relative;">
-                                                                <button class="btn btn-link dropdown-toggle-no-arrow p-0" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                    <i class="bi bi-three-dots-vertical"></i>
-                                                                    <span class="notification-dot"></span>
-                                                                </button>
-                                                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                                                    <% if (returnedProductMap[item.product._id].status === 'requested') { %>
-                                                                        <li>
-                                                                            <a class="dropdown-item text-success" onclick="returnReq('<%= item.product._id %>', 'Accept', '<%= order._id %>')">Accept</a>
-                                                                        </li>
-                                                                        <li>
-                                                                            <a class="dropdown-item text-danger" onclick="returnReq('<%= item.product._id %>', 'Reject', '<%= order._id %>')">Reject</a>
-                                                                        </li>
-                                                                    <% } else if (returnedProductMap[item.product._id].status === 'approved') { %>
-                                                                        <li>
-                                                                            <a class="dropdown-item text-primary" onclick="returnReq('<%= item.product._id %>', 'Returned', '<%= order._id %>')">Returned</a>
-                                                                        </li>
-                                                                    <% } %>
-                                                                </ul>
-                                                            </div>
-                                                        <% } %>
-                                                    </div>
-                                                <% } else { %>
-                                                    <span>No return requested</span>
-                                                <% } %>
-                                            </td>
-
-                                            <td style="padding-right: 30px;">
-                                                <% if (returnedProductMap[item.product._id] && returnedProductMap[item.product._id].reason) { %>
-                                                    <%= returnedProductMap[item.product._id].reason %>
-                                                <% } else { %>
-                                                    N/A
-                                                <% } %>
-                                            </td>
-
-                                            <td class="text-end">
-                                                <strong>₹<%= (item.price * item.quantity).toFixed(2) %></strong>
-                                            </td>
-                                        </tr>
-                                    <% }); %>
-                                <% } else { %>
+                            <h6 class="text-muted">Coupon Code: <strong><%= order.coupon.couponCode %></strong></h6>
+                            <h6 class="text-muted">Discount: ₹<%= order.couponDiscound.toFixed(2) %></h6>
+                        </div>
+                    </div>
+                <% } %>
+            
+                <!-- Table for order products -->
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="table-responsive">
+                            <table class="table table-bordered w-100">
+                                <thead class="thead-light">
                                     <tr>
-                                        <td colspan="6" class="text-center">No products found in this order.</td>
+                                        <th width="40%">Product</th>
+                                        <th width="20%">Unit Price</th>
+                                        <th width="20%">Quantity</th>
+                                        <th width="10%">Status</th>
+                                        <th width="10%">Return Status</th>
+                                        <th width="10%">Return Reason</th>
+                                        <th width="10%" class="text-end">Total</th>
                                     </tr>
-                                <% } %>
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <th colspan="5" class="text-end">Subtotal:</th>
-                                    <td class="text-end">₹<%= order.totalPrice.toFixed(2) %></td>
-                                </tr>
-                                <tr>
-                                    <th colspan="5" class="text-end">Total:</th>
-                                    <td class="text-end"><strong>₹<%= order.totalPrice.toFixed(2) %></strong></td>
-                                </tr>
-                            </tfoot>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <% if (order.products && order.products.length > 0) { %>
+                                        <% order.products.forEach(item => { %>
+                                            <tr class="product-row">
+                                                <td>
+                                                    <a class="itemside d-flex align-items-center" href="#">
+                                                        <div class="left">
+                                                            <img src="/uploads/<%= item.product.images[0] %>" width="40" height="40" class="img-xs" alt="Item" />
+                                                        </div>
+                                                        <div class="info ms-2">
+                                                            <%= item.product ? item.product.name : 'No Product Name' %>
+                                                        </div>
+                                                    </a>
+                                                </td>
+                                                <td>₹<%= item.price.toFixed(2) %></td>
+                                                <td><%= item.quantity %></td>
+                                                
+                                                <!-- Canceled Status -->
+                                                <td>
+                                                    <% if (item.is_cancelled) { %>
+                                                        <span class="badge bg-danger">Canceled</span>
+                                                    <% } else { %>
+                                                        <span class="badge bg-success">Active</span>
+                                                    <% } %>
+                                                </td>
+            
+                                                <!-- Return Status and Actions -->
+                                                <td style="padding-right: 30px; padding-bottom: 15px;">
+                                                    <% if (returnedProductMap[item.product._id]) { %>
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <span class="badge 
+                                                                <%= returnedProductMap[item.product._id].status === 'requested' ? 'bg-warning' : '' %>
+                                                                <%= returnedProductMap[item.product._id].status === 'approved' ? 'bg-info' : '' %>
+                                                                <%= returnedProductMap[item.product._id].status === 'rejected' ? 'bg-danger' : '' %>
+                                                                <%= returnedProductMap[item.product._id].status === 'returned' ? 'bg-success' : '' %>">
+                                                                <%= returnedProductMap[item.product._id].status %>
+                                                            </span>
+                                                            <% if (returnedProductMap[item.product._id].status === 'requested' || returnedProductMap[item.product._id].status === 'approved') { %>
+                                                                <div class="dropdown" style="position: relative;">
+                                                                    <button class="btn btn-link dropdown-toggle-no-arrow p-0" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                        <i class="bi bi-three-dots-vertical"></i>
+                                                                        <span class="notification-dot"></span>
+                                                                    </button>
+                                                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                                                        <% if (returnedProductMap[item.product._id].status === 'requested') { %>
+                                                                            <li>
+                                                                                <a class="dropdown-item text-success" onclick="returnReq('<%= item.product._id %>', 'Accept', '<%= order._id %>')">Accept</a>
+                                                                            </li>
+                                                                            <li>
+                                                                                <a class="dropdown-item text-danger" onclick="returnReq('<%= item.product._id %>', 'Reject', '<%= order._id %>')">Reject</a>
+                                                                            </li>
+                                                                        <% } else if (returnedProductMap[item.product._id].status === 'approved') { %>
+                                                                            <li>
+                                                                                <a class="dropdown-item text-primary" onclick="returnReq('<%= item.product._id %>', 'Returned', '<%= order._id %>')">Returned</a>
+                                                                            </li>
+                                                                        <% } %>
+                                                                    </ul>
+                                                                </div>
+                                                            <% } %>
+                                                        </div>
+                                                    <% } else { %>
+                                                        <span>No return requested</span>
+                                                    <% } %>
+                                                </td>
+            
+                                                <td style="padding-right: 30px;">
+                                                    <% if (returnedProductMap[item.product._id] && returnedProductMap[item.product._id].reason) { %>
+                                                        <%= returnedProductMap[item.product._id].reason %>
+                                                    <% } else { %>
+                                                        N/A
+                                                    <% } %>
+                                                </td>
+            
+                                                <td class="text-end">
+                                                    <strong>₹<%= (item.price * item.quantity).toFixed(2) %></strong>
+                                                </td>
+                                            </tr>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="7" class="text-center">No products found in this order.</td>
+                                        </tr>
+                                    <% } %>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="6" class="text-end">Subtotal:</th>
+                                        <td class="text-end">₹<%= order.totalPrice.toFixed(2) %></td>
+                                    </tr>
+                                    <% if (order.coupon) { %>
+                                        <tr>
+                                            <th colspan="6" class="text-end">Discount:</th>
+                                            <td class="text-end">₹<%= order.couponDiscound.toFixed(2) %></td>
+                                        </tr>
+                                    <% } %>
+                                    <tr>
+                                        <th colspan="6" class="text-end">Total:</th>
+                                        <td class="text-end"><strong>₹<%= order.totalPrice.toFixed(2) %></strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
+            
             <!-- row // -->
         </div>
         <!-- card-body end // -->

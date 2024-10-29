@@ -22,6 +22,13 @@ const addCoupon = async (req, res) => {
             return res.status(400).json({ success: false, error: 'All fields are required' });
         }
 
+        // Check if the coupon code already exists
+        const existingCoupon = await Coupon.findOne({ couponCode });
+        if (existingCoupon) {
+            return res.status(400).json({ success: false, error: 'Coupon code already exists' });
+        }
+
+        // Create a new coupon if code does not exist
         const newCoupon = new Coupon({
             name,
             percentage,
@@ -34,7 +41,7 @@ const addCoupon = async (req, res) => {
 
         const savedCoupon = await newCoupon.save();
 
-         res.status(200).json({
+        res.status(200).json({
             success: true,
             data: savedCoupon,
             message: 'Coupon added successfully'
@@ -45,6 +52,7 @@ const addCoupon = async (req, res) => {
         res.status(500).json({ success: false, error: 'Failed to add coupon. Please try again.' });
     }
 };
+
 
 
 // Edit Coupon function
@@ -108,25 +116,23 @@ const applyCoupon = async (req, res) => {
             status: true,
             expiryDate: { $gte: new Date() }
         });
-        // Calculate the original total with offer prices
+
         let originalTotal = 0;
         const productsWithPrices = cartItems.products.map(cartItem => {
             const product = cartItem.product;
 
-            // Determine offer price
             let offerPrice = null;
             const productOffer = activeOffers.find(offer => offer.offerType === 'product' && offer.selectItem.equals(product._id));
             const categoryOffer = activeOffers.find(offer => offer.offerType === 'category' && offer.selectItem.equals(product.category._id));
 
             if (productOffer) {
                 offerPrice = product.price - (product.price * (productOffer.discountPercentage / 100));
-                
             } else if (categoryOffer) {
                 offerPrice = product.price - (product.price * (categoryOffer.discountPercentage / 100));
             }
 
-            const finalPrice = offerPrice || product.price; // Use offer price if available, otherwise original price
-            originalTotal += finalPrice * cartItem.quantity; // Calculate total with offer prices
+            const finalPrice = offerPrice || product.price;
+            originalTotal += finalPrice * cartItem.quantity;
 
             return {
                 product: product._id,
@@ -150,7 +156,8 @@ const applyCoupon = async (req, res) => {
         const discountAmount = Math.min((coupon.percentage / 100) * originalTotal, coupon.maxredeemAmount);
         const newTotal = originalTotal - discountAmount;
 
-        req.session.couponDiscount = discountAmount
+        req.session.couponDiscount = discountAmount;
+        req.session.couponId = coupon._id; // Store the coupon ID in the session
         req.session.discountedTotal = newTotal;
 
         return res.json({
@@ -166,6 +173,7 @@ const applyCoupon = async (req, res) => {
         return res.status(500).json({ success: false, message: 'An error occurred while applying the coupon.' });
     }
 };
+
 
 
 module.exports = {

@@ -20,6 +20,10 @@ const orderSchema = new Schema({
         price: {
             type: Number,
             required: true,
+        },
+        is_cancelled:{
+          type:Boolean,
+          default:false
         }
     }],
     totalPrice: {
@@ -40,6 +44,10 @@ const orderSchema = new Schema({
         enum: ['COD', 'Razorpay','Wallet'],
         default: 'COD',
         required: true,
+    },
+    coupon: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Coupon'
     },
     couponDiscound:{
         type : Number

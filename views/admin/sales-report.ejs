@@ -43,6 +43,8 @@
                     <label for="endDate">End Date</label>
                     <input type="date" id="endDate" name="endDate" class="form-control">
                 </div>
+                <div id="validationMessage" style="color: red; display: none;"></div>
+
             </div>
             <button type="submit" class="btn btn-primary mt-3">Generate Report</button>
 
@@ -89,20 +91,69 @@
     // Fetch today's report on page load
     window.addEventListener('DOMContentLoaded', async function() {
         document.getElementById('dateRange').value = 'today';
+        setMaxDate(); // Set maximum date to today
         await fetchSalesReport(); // Load today's sales report
     });
+
+    // Set the maximum date to today's date for date inputs
+    function setMaxDate() {
+        const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+        document.getElementById('startDate').max = today;
+        document.getElementById('endDate').max = today;
+    }
 
     // Toggle custom date range input fields
     document.getElementById('dateRange').addEventListener('change', function() {
         const customDateRange = document.getElementById('customDateRange');
         customDateRange.style.display = this.value === 'custom' ? 'block' : 'none';
+        clearValidationMessage();
     });
 
     // Handle form submission for report generation
     document.getElementById('reportForm').addEventListener('submit', async function(event) {
         event.preventDefault();
+
+        if (!validateDateRange()) {
+            return; // Stop if validation fails
+        }
+
         await fetchSalesReport(); // Fetch report data based on selected date range
     });
+
+    // Validate custom date range
+    function validateDateRange() {
+        const dateRange = document.getElementById('dateRange').value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        // Check if custom date range is selected
+        if (dateRange === 'custom') {
+            if (!startDate || !endDate) {
+                displayValidationMessage('Both start and end dates are required for custom date range.');
+                return false;
+            }
+
+            if (new Date(startDate) > new Date(endDate)) {
+                displayValidationMessage('Start date cannot be later than end date.');
+                return false;
+            }
+        }
+        clearValidationMessage();
+        return true;
+    }
+
+    // Display validation message
+    function displayValidationMessage(message) {
+        const validationMessage = document.getElementById('validationMessage');
+        validationMessage.textContent = message;
+        validationMessage.style.display = 'block';
+    }
+
+    // Clear validation message
+    function clearValidationMessage() {
+        const validationMessage = document.getElementById('validationMessage');
+        validationMessage.style.display = 'none';
+    }
 
     // Fetch sales report based on selected date range
     async function fetchSalesReport() {
@@ -210,3 +261,4 @@
         });
     }
 </script>
+

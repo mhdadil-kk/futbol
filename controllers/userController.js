@@ -5,7 +5,7 @@ const Product = require('../models/product');
 const { validationResult } = require('express-validator');
 const Address = require('../models/address');
 const Wishlist = require('../models/wishlist');
-const crypto = require('crypto'); 
+const crypto = require('crypto');
 const Wallet = require('../models/wallet');
 const Category = require('../models/category');
 const Offer = require('../models/offer');
@@ -21,7 +21,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const generateOTP = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString(); 
+    return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 const sendOTPEmail = async (email, otp) => {
@@ -31,7 +31,7 @@ const sendOTPEmail = async (email, otp) => {
         subject: 'Your OTP Code',
         text: `Your OTP code is ${otp}. It expires in 5 minutes.`
     };
-    
+
     await transporter.sendMail(mailOptions);
 }
 
@@ -70,7 +70,7 @@ const resendOTP = async (req, res) => {
 
 const loadRegister = async (req, res) => {
     try {
-        res.render('user/register',{errors: [] ,error:''});
+        res.render('user/register', { errors: [], error: '' });
     } catch (error) {
         console.log(error.message);
         res.status(500).send('Server Error');
@@ -91,44 +91,44 @@ const registerUser = async (req, res) => {
     try {
 
         const errors = validationResult(req);
-   
-   
-      if (!errors.isEmpty()) {
-        return res.render('user/register', {
-          errors:  errors.errors,
-          error :''
-        });
-      }
+
+
+        if (!errors.isEmpty()) {
+            return res.render('user/register', {
+                errors: errors.errors,
+                error: ''
+            });
+        }
 
         const { name, email, mobile, password, confirmPassword } = req.body;
 
-        if (!name || !email || !mobile || !password ,!confirmPassword) {
-            return res.status(400).render('user/register', { errors: [] ,error: 'All fields are required' });
+        if (!name || !email || !mobile || !password, !confirmPassword) {
+            return res.status(400).render('user/register', { errors: [], error: 'All fields are required' });
         }
 
-        
+
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).render('user/register', { errors: [],error: 'Email already registered.' });
+            return res.status(400).render('user/register', { errors: [], error: 'Email already registered.' });
         }
-       
-     
 
 
-        
-       if(!req.session.userData){
-        const sPassword = await securePassword(password);
-        const otp = generateOTP();
-        console.log(otp)
-        const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
 
-        req.session.userData = { name, email, mobile, password: sPassword, otp, otpExpiry };
 
-        
-        await sendOTPEmail(email, otp);
-       }
-       
-        res.render('user/verifyOTP', { email, error: null ,success :null ,errors: [] });
+
+        if (!req.session.userData) {
+            const sPassword = await securePassword(password);
+            const otp = generateOTP();
+            console.log(otp)
+            const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
+
+            req.session.userData = { name, email, mobile, password: sPassword, otp, otpExpiry };
+
+
+            await sendOTPEmail(email, otp);
+        }
+
+        res.render('user/verifyOTP', { email, error: null, success: null, errors: [] });
     } catch (error) {
         console.log(error);
         res.status(500).send('Server Error');
@@ -137,10 +137,10 @@ const registerUser = async (req, res) => {
 
 const verifyOTP = async (req, res) => {
     try {
-       
+
         const { email, otp } = req.body;
-       console.log(email , otp)       
- 
+        console.log(email, otp)
+
 
         if (!email || !otp) {
             return res.json({ error: 'Email and OTP are required' });
@@ -181,7 +181,11 @@ const verifyOTP = async (req, res) => {
 
 const loadLogin = async (req, res) => {
     try {
-        res.render('user/login', {errors : [] , error:""});
+        if (!req.session.user) {
+            res.render('user/login', { errors: [], error: "" });
+        } else {
+            res.redirect('/')
+        }
     } catch (error) {
         console.log(error.message);
         res.status(500).send('Server Error');
@@ -190,11 +194,11 @@ const loadLogin = async (req, res) => {
 
 const verifyLogin = async (req, res) => {
     try {
-        
+
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.render('user/login', { 
-                errors:  errors.errors,
+            return res.render('user/login', {
+                errors: errors.errors,
                 error: ''
             });
         }
@@ -202,34 +206,34 @@ const verifyLogin = async (req, res) => {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            return res.render('user/login', { errors : [],error: 'Email and password are required' });
+            return res.render('user/login', { errors: [], error: 'Email and password are required' });
         }
 
-        const userData = await User.findOne({ email  });
+        const userData = await User.findOne({ email });
 
         if (userData) {
             if (!userData.isVerified) {
-                return res.render('user/login', {errors : [], error: 'Please verify your email before logging in' });
+                return res.render('user/login', { errors: [], error: 'Please verify your email before logging in' });
             }
 
-            if(userData.is_blocked){
-                return res.render('user/login',{errors : [], error: 'your not allowed' })
+            if (userData.is_blocked) {
+                return res.render('user/login', { errors: [], error: 'your not allowed' })
             }
 
             const checkPassword = await bcrypt.compare(password, userData.password);
             if (checkPassword) {
                 req.session.user_id = userData._id;
-                req.session.user = {  
+                req.session.user = {
                     name: userData.name,
                     email: userData.email,
                     mobile: userData.mobile,
                 };
-                res.redirect('/'); 
+                res.redirect('/');
             } else {
-                res.render('user/login', { errors:[], error: 'Invalid email or password' });
+                res.render('user/login', { errors: [], error: 'Invalid email or password' });
             }
         } else {
-            res.render('user/login', {  errors:[], error: 'Invalid email or password' });
+            res.render('user/login', { errors: [], error: 'Invalid email or password' });
         }
     } catch (error) {
         console.log(error.message);
@@ -259,7 +263,7 @@ const forgotPassword = async (req, res) => {
 
         const resetToken = crypto.randomBytes(32).toString('hex');
         const tokenExpiry = Date.now() + 3600000;
-       console.log(resetToken)
+        console.log(resetToken)
         user.resetPasswordToken = resetToken;
         user.resetPasswordExpires = tokenExpiry;
         await user.save();
@@ -339,7 +343,7 @@ const resetPassword = async (req, res) => {
         user.resetPasswordExpires = undefined; // remove token expiry
         await user.save();
 
-    res.redirect('/login')
+        res.redirect('/login')
     } catch (error) {
         console.log(error);
         res.status(500).send('Server Error');
@@ -352,8 +356,8 @@ const loadHome = async (req, res) => {
     try {
 
         const products = await Product.find({ status: false }).sort({ createdAt: -1 }).limit(4);
-        res.render('user/index' ,{products});
-       
+        res.render('user/index', { products });
+
     } catch (error) {
         console.log(error.message);
         res.status(500).send('Server Error');
@@ -369,14 +373,14 @@ const loadProfile = async (req, res) => {
         //     return res.redirect('/login'); 
         // }
 
-        const user = await User.findById(req.session.user_id); 
+        const user = await User.findById(req.session.user_id);
         const addresses = await Address.find({ user: user._id });
-        const wallet  = await Wallet.find({user : user._id})
+        const wallet = await Wallet.find({ user: user._id }).sort({ createdAt: -1 }); 
         if (!user) {
-            return res.redirect('/login'); 
+            return res.redirect('/login');
         }
 
-        res.render('user/profile', { user  ,addresses ,wallet }); 
+        res.render('user/profile', { user, addresses, wallet });
     } catch (error) {
         console.error(error);
         res.status(500).send('Server Error');
@@ -387,21 +391,21 @@ const updateProfile = async (req, res) => {
     try {
         console.log("here")
         if (!req.session.user_id) {
-            return res.redirect('/login'); 
+            return res.redirect('/login');
         }
 
         const { name, mobile } = req.body;
         console.log(mobile)
 
-        
+
         if (!name || !mobile) {
             return res.redirect('/profile');
         }
 
-       
+
         await User.findByIdAndUpdate(req.session.user_id, { name, mobile });
 
-        res.redirect('/profile'); 
+        res.redirect('/profile');
     } catch (error) {
         console.error(error);
         res.status(500).send('Server Error');
@@ -414,16 +418,19 @@ const loadShop = async (req, res) => {
     try {
         const userWishlist = await Wishlist.findOne({ user: req.session.user_id });
 
-        const products = await Product.find().populate('category'); // Fetch all products and populate their categories
+        const products = await Product.find({ status: false }).populate('category'); 
         const categories = await Category.find({ is_hide: false });
 
-        const activeOffers = await Offer.find({ 
-            status: true, 
-            expiryDate: { $gte: new Date() } 
+        const activeOffers = await Offer.find({
+            status: true,
+            expiryDate: { $gte: new Date() }
         });
 
         // Filter out hidden products and products with hidden categories
-        const visibleProducts = products.filter(product => product.status === false && product.category.is_hide === false);
+        const visibleProducts = products.filter(product => {
+            // Check if product category exists and is not hidden
+            return product.status === false && product.category && !product.category.is_hide;
+        });
 
         // Apply offers to the filtered products
         const productData = visibleProducts.map(product => {
@@ -440,9 +447,9 @@ const loadShop = async (req, res) => {
                 offerPrice = product.price - (product.price * (applicableOffer.discountPercentage / 100));
             }
 
-            return { 
-                ...product._doc, 
-                offer: applicableOffer, 
+            return {
+                ...product._doc,
+                offer: applicableOffer,
                 offerPrice,
                 discountPercentage: applicableOffer ? applicableOffer.discountPercentage : 0
             };
@@ -455,84 +462,54 @@ const loadShop = async (req, res) => {
     }
 };
 
-// Filter By Category Function
-const filterByCategory = async (req, res) => {
-    try {
-        const categoryName = req.query.category;
-        const category = await Category.findOne({ name: categoryName });
 
-        if (!category) {
-            return res.status(404).json({ message: 'Category not found' });
-        }
 
-        let products = await Product.find({ category: category._id }).populate('category'); // Fetch all products in category
-
-        const activeOffers = await Offer.find({ 
-            status: true, 
-            expiryDate: { $gte: new Date() } 
-        });
-
-        // Filter out hidden products and products with hidden categories
-        const visibleProducts = products.filter(product => product.status === false && product.category.is_hide === false);
-
-        const productData = visibleProducts.map(product => {
-            let applicableOffer = null;
-            let offerPrice = null;
-
-            const productOffer = activeOffers.find(offer => offer.offerType === 'product' && offer.selectItem.equals(product._id));
-            const categoryOffer = activeOffers.find(offer => offer.offerType === 'category' && offer.selectItem.equals(product.category._id));
-
-            if (productOffer) applicableOffer = productOffer;
-            else if (categoryOffer) applicableOffer = categoryOffer;
-
-            if (applicableOffer) {
-                offerPrice = product.price - (product.price * (applicableOffer.discountPercentage / 100));
-            }
-
-            return { 
-                ...product._doc, 
-                offer: applicableOffer, 
-                offerPrice,
-                discountPercentage: applicableOffer ? applicableOffer.discountPercentage : 0
-            };
-        });
-
-        res.json(productData);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Server Error');
-    }
-};
 
 // Load Advanced Search Function
-const loadAdvancedSearch = async (req, res) => {
-    const sortOption = req.query.sort;
-    let sort = {};
+const loadProducts = async (req, res) => {
+    const { page = 1, category, sort, query: searchQuery } = req.query;
+    const limit = 9;
+    const skip = (page - 1) * limit;
+    let query = { status: false };
 
-    switch (sortOption) {
-        case 'popularity': sort.popularity = -1; break;
-        case 'price_asc': sort.price = 1; break;
-        case 'price_desc': sort.price = -1; break;
-        case 'avg_rating': sort.averageRating = -1; break;
-        case 'featured': sort.featured = -1; break;
-        case 'new_arrivals': sort.createdAt = -1; break;
-        case 'az': sort.name = 1; break;
-        case 'za': sort.name = -1; break;
-        default: sort.popularity = -1; break;
+    // Filter by category if provided
+    if (category) {
+        const categoryData = await Category.findOne({ name: category });
+        if (categoryData) {
+            query.category = categoryData._id;
+        }
     }
 
+    // Add search query if provided
+    if (searchQuery) {
+        query.name = { $regex: searchQuery, $options: 'i' };
+    }
+
+    // Sort options based on the provided sort criteria
+    let sortOption = {};
+    switch (sort) {
+        case 'popularity': sortOption.popularity = -1; break;
+        case 'price_asc': sortOption.price = 1; break;
+        case 'price_desc': sortOption.price = -1; break;
+        case 'avg_rating': sortOption.averageRating = -1; break;
+        case 'featured': sortOption.featured = -1; break;
+        case 'new_arrivals': sortOption.createdAt = -1; break;
+        case 'az': sortOption.name = 1; break;
+        case 'za': sortOption.name = -1; break;
+        default: sortOption.popularity = -1; break;
+    }
+   
+    sortOption._id = 1;
+
     try {
-        const products = await Product.find().populate('category').sort(sort); // Fetch all products and sort
+        const products = await Product.find(query).populate('category').sort(sortOption).skip(skip).limit(limit);
+        const totalProducts = await Product.countDocuments(query);
+        const totalPages = Math.ceil(totalProducts / limit);
 
-        const activeOffers = await Offer.find({ 
-            status: true, 
-            expiryDate: { $gte: new Date() } 
-        });
+        const activeOffers = await Offer.find({ status: true, expiryDate: { $gte: new Date() } });
 
-        // Filter out hidden products and products with hidden categories
-        const visibleProducts = products.filter(product => product.status === false && product.category.is_hide === false);
-
-        const productData = visibleProducts.map(product => {
+        // Apply offers and filter hidden products
+        const productData = products.map(product => {
             let applicableOffer = null;
             let offerPrice = null;
 
@@ -546,73 +523,29 @@ const loadAdvancedSearch = async (req, res) => {
                 offerPrice = product.price - (product.price * (applicableOffer.discountPercentage / 100));
             }
 
-            return { 
-                ...product._doc, 
-                offer: applicableOffer, 
+            return {
+                ...product._doc,
+                offer: applicableOffer,
                 offerPrice,
                 discountPercentage: applicableOffer ? applicableOffer.discountPercentage : 0
             };
         });
 
-        res.json(productData); 
-    } catch (err) {
-        console.log('Load Advanced Search error:', err);
+        res.json({
+            products: productData,
+            wishlist: req.userWishlist ? req.userWishlist.product : [],
+            totalPages: totalPages
+        });
+    } catch (error) {
+        console.error('Error loading products:', error);
         res.status(500).send('Server Error');
     }
 };
 
+
+
 // Search Function
-const search = async (req, res) => {
-    try {
-        const query = req.query.query ? req.query.query.trim() : '';
 
-        // If no query is provided, return all products (without hiding logic)
-        let products;
-        if (!query) {
-            products = await Product.find().populate('category');
-        } else {
-            // If a query is provided, filter based on the product name
-            products = await Product.find({
-                name: { $regex: query, $options: 'i' }
-            }).populate('category');
-        }
-
-        const activeOffers = await Offer.find({ 
-            status: true, 
-            expiryDate: { $gte: new Date() } 
-        });
-
-        // Filter out hidden products and hidden categories
-        const visibleProducts = products.filter(product => product.status === false && product.category.is_hide === false);
-
-        const productData = visibleProducts.map(product => {
-            let applicableOffer = null;
-            let offerPrice = null;
-
-            const productOffer = activeOffers.find(offer => offer.offerType === 'product' && offer.selectItem.equals(product._id));
-            const categoryOffer = activeOffers.find(offer => offer.offerType === 'category' && offer.selectItem.equals(product.category._id));
-
-            if (productOffer) applicableOffer = productOffer;
-            else if (categoryOffer) applicableOffer = categoryOffer;
-
-            if (applicableOffer) {
-                offerPrice = product.price - (product.price * (applicableOffer.discountPercentage / 100));
-            }
-
-            return { 
-                ...product._doc, 
-                offer: applicableOffer, 
-                offerPrice,
-                discountPercentage: applicableOffer ? applicableOffer.discountPercentage : 0
-            };
-        });
-
-        res.json(productData);
-    } catch (err) {
-        console.error('Search error:', err);
-        res.status(500).json({ error: 'An error occurred while searching for products.' });
-    }
-};
 
 
 // Load Product Details Function
@@ -656,7 +589,7 @@ const loadProductDetails = async (req, res) => {
                 discountPercentage: applicableOffer ? applicableOffer.discountPercentage : 0
             },
             offer: applicableOffer,
-            Products: relatedProducts ,wishlist: userWishlist ? userWishlist.product : []
+            Products: relatedProducts, wishlist: userWishlist ? userWishlist.product : []
         });
     } catch (err) {
         console.log('Error loading product details:', err);
@@ -666,13 +599,13 @@ const loadProductDetails = async (req, res) => {
 
 
 
-const addAddress = async(req,res)=>{
+const addAddress = async (req, res) => {
     const { userId, name, streetAddress, state, district, pinCode, mobile, country } = req.body;
 
     if (!userId || !name || !streetAddress || !state || !district || !pinCode || !mobile || !country) {
         return res.status(400).json({ message: 'All fields are required' });
     }
-    try{
+    try {
 
         const newAddress = new Address({
             user: userId, // Associate address with the user ID from the request
@@ -689,7 +622,7 @@ const addAddress = async(req,res)=>{
         res.status(200).json({ message: 'Address saved successfully' });
 
 
-    }catch(error){
+    } catch (error) {
         console.error('Error saving address:', error);
         res.status(500).json({ message: 'An error occurred while saving the address' });
     }
@@ -700,15 +633,15 @@ const updateAddress = async (req, res) => {
     try {
         const addressId = req.params.id
 
-        const {   name, streetAddress, state, district, pinCode, mobile, country } = req.body;
+        const { name, streetAddress, state, district, pinCode, mobile, country } = req.body;
 
         // Check if all fields are provided
-        if ( !addressId || !name || !streetAddress || !state || !district || !pinCode || !mobile || !country) {
+        if (!addressId || !name || !streetAddress || !state || !district || !pinCode || !mobile || !country) {
             return res.status(400).json({ message: 'All fields are required' });
         }
         const address = await Address.findById(addressId)
 
-       
+
 
         // Update the address details
         address.name = name;
@@ -737,7 +670,7 @@ const deleteAddress = async (req, res) => {
         }
 
         const result = await Address.deleteOne({ _id: id });
-        
+
         if (result.deletedCount === 0) {
             return res.status(404).send({ message: 'Address not found' });
         }
@@ -755,13 +688,13 @@ const deleteAddress = async (req, res) => {
 
 const logout = async (req, res) => {
     try {
-        
+
         req.session.destroy((err) => {
             if (err) {
                 console.log(err);
                 res.send("Error");
             } else {
-             res.redirect('/')
+                res.redirect('/')
             }
         });
     } catch (error) {
@@ -786,9 +719,7 @@ module.exports = {
     loadProfile,
     updateProfile,
     loadShop,
-    filterByCategory,
-    loadAdvancedSearch,
-    search,
+    loadProducts,
     loadProductDetails,
     addAddress,
     updateAddress,

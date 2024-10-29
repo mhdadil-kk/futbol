@@ -17,7 +17,6 @@ const ensureAuthenticated = async (req, res, next) => {
         } else {
             res.redirect('/login');
         }
-    
    
 };
 const ensureAdmin = (req, res, next) => {

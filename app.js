@@ -9,14 +9,14 @@ const { ensureAuthenticated, isAuthenticated } = require('./middlewares/auth');
 const connectDB = require('./config/db');
 require('dotenv').config();
 const colors = require('colors') 
-
+const nocache = require('nocache')
 const app = express();
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
-
+app.use(nocache())
 
 app.use(session({
     secret: uuidv4(),

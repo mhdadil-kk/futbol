@@ -1,13 +1,14 @@
 <%- include('adheader') %>
 <style>
-    @media (max-width: 576px) {
-        .table tbody tr {
-            border-bottom: 1px solid #dee2e6; /* Border color */
-        }
-
-        .table tbody tr:last-child {
-            border-bottom: none; /* Remove border for the last row */
-        }
+    .pagination .active .page-link {
+        background-color: #007bff; /* Bootstrap primary color */
+        color: white;
+    }
+    .pagination .page-link {
+        color: #007bff;
+    }
+    .pagination .page-link:hover {
+        color: #0056b3;
     }
 </style>
 
@@ -20,12 +21,7 @@
     </div>
 
     <div class="card mb-4">
-        <header class="card-header">
-            <div class="row gx-3">
-                <!-- You can add filters or search inputs here if needed -->
-            </div>
-        </header>
-
+        <header class="card-header"></header>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-hover">
@@ -43,7 +39,7 @@
                     <tbody>
                         <% orders.forEach(order => { %>
                             <tr>
-                                <td>#<%= order._id.toString().slice(-5).toUpperCase() %></td> <!-- Show last 5 characters of the order ID -->
+                                <td>#<%= order._id.toString().slice(-5).toUpperCase() %></td>
                                 <td><%= order.user ? order.user.name : 'No User Data' %></td>
                                 <td><%= order.user ? order.user.email : 'No User Data' %></td>
                                 <td>₹<%= order.totalPrice.toFixed(2) %></td>
@@ -61,7 +57,21 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Pagination -->
+            <div class="pagination-area mt-30 mb-50">
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-center">
+                        <% for (let i = 1; i <= totalPages; i++) { %>
+                            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                <a class="page-link" href="/admin/orders?page=<%= i %>"><%= i %></a>
+                            </li>
+                        <% } %>
+                    </ul>
+                </nav>
+            </div>
         </div>
     </div>
 </section>
+
 <%- include('adfooter') %>

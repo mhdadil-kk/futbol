@@ -8,6 +8,7 @@ const Product = require('../models/product')
 const crypto = require('crypto');
 const ReturnOrder = require("../models/ReturnOrder");
 const mongoose = require('mongoose');
+const Coupon = require("../models/coupon");
 const { ObjectId } = mongoose.Types;
 const razorpayInstance = new Razorpay({
     key_id: process.env.KEY_ID,
@@ -107,13 +108,13 @@ const loadOrderDetails = async (req, res) => {
 
 
 
+
 const cancelOrder = async (req, res) => {
     const { orderId } = req.params;
     const { selectedProducts, cancellationReason } = req.body;
 
     try {
         const order = await Order.findById(orderId).populate('products.product');
-
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
@@ -127,6 +128,7 @@ const cancelOrder = async (req, res) => {
         }
 
         let refundAmount = 0;
+        let remainingTotal = Number(order.totalPrice || 0) + Number(order.couponDiscount || 0);
 
         for (const productId of selectedProducts) {
             const productIndex = order.products.findIndex(item => item.product._id.toString() === productId);
@@ -136,26 +138,43 @@ const cancelOrder = async (req, res) => {
             }
 
             const canceledProduct = order.products[productIndex];
-
             const product = await Product.findById(canceledProduct.product._id);
             if (product) {
                 product.stock += canceledProduct.quantity;
                 await product.save();
             }
 
-            refundAmount += canceledProduct.price * canceledProduct.quantity;
-            order.products.splice(productIndex, 1);
+            canceledProduct.is_cancelled = true;
+            const productTotalPrice = Number(canceledProduct.price || 0) * Number(canceledProduct.quantity || 0);
+            refundAmount += productTotalPrice;
+            remainingTotal -= productTotalPrice;
         }
 
-        order.totalPrice -= refundAmount;
+        if (order.couponDiscount > 0) {
+            const coupon = await Coupon.findById(order.coupon);
+            if (coupon) {
+                const currentDate = new Date();
+                if (currentDate <= coupon.expires && coupon.status) {
+                    if (remainingTotal >= coupon.minimumAmount) {
+                        const discountAmount = (remainingTotal * coupon.percentage) / 100;
+                        order.couponDiscount = Math.min(discountAmount, coupon.maxredeemAmount);
+                    } else {
+                        order.couponDiscount = 0;
+                    }
+                } else {
+                    order.couponDiscount = 0;
+                }
+            }
+        }
 
-        if (order.products.length === 0) {
+        order.totalPrice = Math.max(0, Number(remainingTotal) - Number(order.couponDiscount || 0));
+
+        if (order.products.every(item => item.is_cancelled)) {
             order.status = 'Cancelled';
         }
 
         const userId = order.user;
         const user = await User.findById(userId);
-
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
@@ -182,6 +201,11 @@ const cancelOrder = async (req, res) => {
         res.status(500).json({ success: false, message: 'An error occurred while cancelling the products', error: error.message });
     }
 };
+
+
+
+
+
 
 
 
@@ -222,7 +246,6 @@ const placeOrder = async (req, res) => {
         const productsWithPrices = cart.products.map(cartItem => {
             const product = cartItem.product;
 
-            // Determine offer price
             let offerPrice = null;
             const productOffer = activeOffers.find(offer => offer.offerType === 'product' && offer.selectItem.equals(product._id));
             const categoryOffer = activeOffers.find(offer => offer.offerType === 'category' && offer.selectItem.equals(product.category._id));
@@ -233,13 +256,13 @@ const placeOrder = async (req, res) => {
                 offerPrice = product.price - (product.price * (categoryOffer.discountPercentage / 100));
             }
 
-            const finalPrice = offerPrice || product.price; // Use offer price if available, otherwise original price
+            const finalPrice = offerPrice || product.price;
             totalPrice += cartItem.quantity * finalPrice;
 
             return {
                 product: product._id,
                 quantity: cartItem.quantity,
-                price: finalPrice // Use final price for order
+                price: finalPrice
             };
         });
 
@@ -247,8 +270,8 @@ const placeOrder = async (req, res) => {
             totalPrice = req.session.discountedTotal;
         }
 
-        let couponDiscound = req.session.couponDiscount;
-        let offerDiscound = req.session.offerPrice;
+        const couponDiscount = req.session.couponDiscount;
+        const couponId = req.session.couponId; // Get the coupon ID from session
         req.session.discountedTotal = null;
 
         // Check for COD payment method and total price > 1000
@@ -259,20 +282,37 @@ const placeOrder = async (req, res) => {
             });
         }
 
-        // Proceed to create order only if COD condition is not triggered or for other payment methods
+        // Check stock availability for all products
+        for (const cartItem of cart.products) {
+            const product = await Product.findById(cartItem.product._id);
+            if (!product || product.stock < cartItem.quantity) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Insufficient stock for product: ${product.name}`
+                });
+            }
+        }
 
+        // Proceed to create order
         const newOrder = new Order({
             user: userId,
             products: productsWithPrices,
             totalPrice,
-            couponDiscound,
-            offerDiscound,
+            couponDiscound: couponDiscount, // Store the coupon discount
+            coupon: couponId, // Store the coupon ID in the order
             deliveryAddress: address,
             paymentMethod,
             status: 'Pending'
         });
 
         const savedOrder = await newOrder.save();
+
+        // Update stock for each product in the order
+        for (const cartItem of cart.products) {
+            const product = await Product.findById(cartItem.product._id);
+            product.stock -= cartItem.quantity; // Decrease stock
+            await product.save(); // Save updated product
+        }
 
         // Handle Wallet Payment
         if (paymentMethod === 'Wallet') {
@@ -294,7 +334,7 @@ const placeOrder = async (req, res) => {
                 payment_type: 'Debit'
             });
             await walletTransaction.save();
-            savedOrder.status = 'Confirmed'
+            savedOrder.status = 'Confirmed';
             savedOrder.paymentStatus = 'Paid';
             await savedOrder.save();
 
@@ -351,6 +391,8 @@ const placeOrder = async (req, res) => {
         });
     }
 };
+
+
 
 
 
@@ -440,18 +482,27 @@ const confirmPayment = async (req, res) => {
 
 const adOrderLoad = async (req, res) => {
     try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10; // Number of orders per page
+
+        const totalOrders = await Order.countDocuments();
+        const totalPages = Math.ceil(totalOrders / limit);
 
         const orders = await Order.find()
             .populate('user', 'name email')
             .populate('products.product', 'name')
             .populate('deliveryAddress')
-            .sort({ createdAt: -1 });
-        res.render('admin/orderList', { orders });
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit);
+
+        res.render('admin/orderList', { orders, totalPages, currentPage: page });
     } catch (error) {
         console.error(error);
         res.status(500).send('Internal Server Error');
     }
 };
+
 
 
 const adOrderDetails = async (req, res) => {
@@ -488,10 +539,11 @@ const adOrderDetails = async (req, res) => {
 
         // Fetch order details
         const order = await Order.findById(orderId)
-            .populate('products.product')
-            .populate('deliveryAddress')
-            .populate('user')
-            .exec();
+        .populate('products.product')
+        .populate('deliveryAddress')
+        .populate('user')
+        .populate('coupon') 
+        .exec();
 
         if (!order) {
             return res.status(404).render('error', { message: 'Order not found' });
