@@ -117,8 +117,6 @@
                 </p>
                 <p>Shipping Method: <%= order.shippingMethod || 'Standard Shipping' %>
                 </p>
-                <p>Tracking Number: <%= order.trackingNumber || 'Not available' %>
-                </p>
             </div>
         </div>
 
@@ -253,10 +251,12 @@
 
                 <h5 class="mt-4" style="color: #ff8800;">Select Products to Return</h5>
                 <form id="returnProductsForm">
+
                     <% order.products.forEach((item, index) => { 
                         const productId = item.product._id.toString();
                         // Check if the product is not in the returnedProductMap
-                        if (!returnedProductMap[productId]) { %>
+                        if (!returnedProductMap[productId]&&!item.is_cancelled) { %>
+                            
                             <div class="form-check" style="margin-bottom: 10px;">
                                 <input class="form-check-input" type="checkbox" value="<%= productId %>"
                                     id="productCheck<%= index %>" name="selectedProducts" style="margin-top: 0.5rem;">

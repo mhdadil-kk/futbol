@@ -21,20 +21,17 @@ const loadOrderList = async (req, res) => {
         const userId = req.session.user_id ? req.session.user_id : null;// Use optional chaining to avoid errors if user is undefined
 
         if (!userId) {
-            console.error('User ID is not defined');
             return res.status(400).send('User not authenticated');
         }
 
         const orders = await Order.find({ user: userId }).sort({ orderDate: -1 }).exec();
 
         if (!orders || orders.length === 0) {
-            console.log('No orders found for user:', userId);
             return res.render('user/order', { orders: [] }); // Render with an empty list
         }
 
         res.render('user/order', { orders });
     } catch (error) {
-        console.error('Error loading orders:', error);
         res.status(500).send('Internal server error');
     }
 };
@@ -44,7 +41,6 @@ const loadOrderList = async (req, res) => {
 const loadOrderDetails = async (req, res) => {
     try {
         const orderId = req.params.orderId;
-        console.log(orderId, "order ID");
 
         // Fetch returned products with detailed status and reason
         const returnedProducts = await ReturnOrder.aggregate([
@@ -65,7 +61,6 @@ const loadOrderDetails = async (req, res) => {
             }
         ]);
 
-        console.log(returnedProducts);
 
         // Create a mapping of returned products with status and reason
         const returnedProductMap = returnedProducts.reduce((acc, item) => {
@@ -100,7 +95,6 @@ const loadOrderDetails = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error fetching order details:', error);
         res.status(500).render('error', { message: 'Error fetching order details' });
     }
 };
@@ -592,12 +586,10 @@ const createReturnOrder = async (req, res) => {
     const { returnReason, selectedProducts } = req.body;
 
     try {
-        // Find the order to ensure it belongs to the user and is eligible for return
         const order = await Order.findById(req.params.orderId)
             .populate('products.product')
-            .populate('user'); // Ensure the user field is populated
+            .populate('user');
 
-        console.log("Order:", order); // Debugging line
 
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found.' });
@@ -607,12 +599,10 @@ const createReturnOrder = async (req, res) => {
             return res.status(500).json({ success: false, message: 'Order user is not defined.' });
         }
 
-        // Verify user ownership
         if (order.user._id.toString() !== req.session.user_id) {
             return res.status(403).json({ success: false, message: 'You are not authorized to return this order.' });
         }
 
-        // Create return order object
         const returnOrder = new ReturnOrder({
             orderId: req.params.orderId,
             userId: req.session.user_id, // Use session user ID
@@ -620,13 +610,12 @@ const createReturnOrder = async (req, res) => {
                 const orderedProduct = order.products.find(item => item.product._id.toString() === productId);
                 return {
                     productId,
-                    quantity: orderedProduct ? orderedProduct.quantity : 1, // Default to 1 if not found
-                    reason: returnReason, // Assign the reason to each product
-                    status: 'requested'    // Assign the initial status to each product
+                    quantity: orderedProduct ? orderedProduct.quantity : 1, 
+                    reason: returnReason, 
+                    status: 'requested'    
                 };
             }),
-            // Removed reason and status from here as they are now included in products
-            status: 'requested' // This can be kept if you want an overall status for the return order
+            status: 'requested' 
         });
 
         // Save return order to the database
@@ -644,47 +633,41 @@ const returnReq = async (req, res) => {
     const { productId, orderId, action } = req.body;
 
     try {
-        // Find the order to ensure it exists and is eligible for return
         const order = await Order.findById(orderId);
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found.' });
         }
 
-        // Find the return order associated with this order ID and product ID
         const returnOrder = await ReturnOrder.findOne({ orderId, 'products.productId': productId });
         if (!returnOrder) {
             return res.status(404).json({ success: false, message: 'Return request not found.' });
         }
 
-        // Find the specific product in the return order
         const productIndex = returnOrder.products.findIndex(item => item.productId.toString() === productId);
         if (productIndex === -1) {
             return res.status(404).json({ success: false, message: 'Product not found in return request.' });
         }
 
-        // Update return order status based on action (Accept, Reject, Returned)
         if (action === 'Accept') {
             returnOrder.products[productIndex].status = 'approved'; 
+
         } else if (action === 'Reject') {
-            returnOrder.products[productIndex].status = 'rejected'; 
+            returnOrder.products[productIndex].status = 'rejected';
+
         } else if (action === 'Returned') {
             returnOrder.products[productIndex].status = 'returned'; 
 
-            // Check if the payment method is 'Razorpay' or 'Wallet'
             if (order.paymentMethod === 'Razorpay' || order.paymentMethod === 'Wallet') {
-                // Find the user associated with this order
                 const user = await User.findById(order.user);
                 if (!user) {
                     return res.status(404).json({ success: false, message: 'User not found.' });
                 }
 
-                // Find the product in the order
                 const product = order.products.find(item => item.product.toString() === productId);
                 if (!product) {
                     return res.status(404).json({ success: false, message: 'Product not found in the order.' });
                 }
 
-                // Add the product amount to the user's wallet
                 user.wallet_balance = (user.wallet_balance || 0) + product.price;
 
                 // Save the updated user details
@@ -696,14 +679,14 @@ const returnReq = async (req, res) => {
                 });
                 await walletTransaction.save();
             }
+
         } else {
             return res.status(400).json({ success: false, message: 'Invalid action.' });
         }
 
-        // Save the updated return order
         await returnOrder.save();
 
-        return res.status(200).json({ success: true, message: `Return request ${action}ed successfully.` });
+        return res.status(200).json({ success: true, message: `Return request ${action}ed successfully OK.` });
     } catch (error) {
         console.error('Error processing return request:', error);
         return res.status(500).json({ success: false, message: 'Internal server error.' });

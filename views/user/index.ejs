@@ -169,12 +169,7 @@
                     <div class="product__item">
                         <div class="product__item__pic">
                            <a href="/product/<%= product._id %>"><img src="/uploads/<%= product.images[0] %>" alt="<%= product.name %>"  class="img-fluid" /></a> 
-                            <% if (product.isNew) { %>
-                                <span class="label">New</span>
-                            <% } %>
-                            <ul class="product__hover">
-                                <li><a href="#"><img src="/img/icon/heart.png" alt=""></a></li>
-                            </ul>
+                                <span class="label" style="background-color: rgb(160, 109, 43);">New</span>
                         </div>
                         <div class="product__item__text">
                             <h6><%= product.name %></h6>

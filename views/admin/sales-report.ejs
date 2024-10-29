@@ -77,10 +77,11 @@
                 </tr>
             </thead>
             <tbody id="salesReportBody">
-                <!-- Sales report rows will be inserted here dynamically -->
             </tbody>
         </table>
     </div>
+    <p id="noDataMessage" style="text-align: center; display: none;">No data available</p>
+
 </section>
 
 <%- include('adfooter') %>
@@ -190,7 +191,17 @@
     // Render sales report data in the table
     function renderSalesReport(reportData) {
         const salesReportBody = document.getElementById('salesReportBody');
-        salesReportBody.innerHTML = ''; // Clear previous rows
+        salesReportBody.innerHTML = ''; 
+        if (reportData.length === 0) {
+        noDataMessage.style.display = 'block'; // Show "No data" message
+        document.getElementById('totalSalesCount').textContent = '0';
+        document.getElementById('totalOrderAmount').textContent = '0.00';
+        document.getElementById('totalDiscount').textContent = '0.00';
+        return;
+    } else {
+        noDataMessage.style.display = 'none'; // Hide "No data" message
+    }
+
         let totalSalesCount = reportData.length;
         let totalOrderAmount = 0;
         let totalDiscount = 0;

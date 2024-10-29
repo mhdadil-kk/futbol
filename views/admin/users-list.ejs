@@ -1,15 +1,10 @@
 <%- include("adheader") %> 
 <section class="content-main">
     <div class="content-header">
-        <h2 class="content-title">Users list</h2>
-       
+        <h2 class="content-title">Users List</h2>
     </div>
     <div class="card mb-4">
-        <header class="card-header">
-            <div class="row gx-3">
-                
-            </div>
-        </header>
+        <header class="card-header"></header>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-hover">
@@ -23,8 +18,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <% if (Users && Users.length > 0) { %>
-                            <% Users.forEach((user, index) => { %>
+                        <% if (users && users.length > 0) { %>
+                            <% users.forEach((user, index) => { %>
                                 <tr data-id="<%= user._id %>">
                                     <td width="40%">
                                         <a href="#" class="itemside d-flex align-items-center">
@@ -42,11 +37,7 @@
                                             <span class="badge rounded-pill alert-danger" id="status-<%= user._id %>">Inactive</span>
                                         <% } %>
                                     </td>
-                                    <td><%= new Date(user.createdAt).toLocaleDateString('en-US', {
-                                        year: 'numeric', 
-                                        month: 'long', 
-                                        day: 'numeric'
-                                    }) %></td>
+                                    <td><%= new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></td>
                                     <td class="text-end">
                                         <div class="dropdown">
                                             <a href="#" data-bs-toggle="dropdown" class="btn btn-light rounded btn-sm font-sm">
@@ -65,7 +56,7 @@
                             <% }) %>
                         <% } else { %>
                             <tr>
-                                <td colspan="5" class="text-center">User not found</td>
+                                <td colspan="5" class="text-center">No users found</td>
                             </tr>
                         <% } %>
                     </tbody>
@@ -73,21 +64,32 @@
             </div>
         </div>
     </div>
-    <!-- <div class="pagination-area mt-15 mb-50">
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-start">
-                <li class="page-item active"><a class="page-link" href="#">01</a></li>
-                <li class="page-item"><a class="page-link" href="#">02</a></li>
-                <li class="page-item"><a class="page-link" href="#">03</a></li>
-                <li class="page-item"><a class="page-link dot" href="#">...</a></li>
-                <li class="page-item"><a class="page-link" href="#">16</a></li>
-                <li class="page-item">
-                    <a class="page-link" href="#"><i class="material-icons md-chevron_right"></i></a>
-                </li>
+    
+    <!-- Pagination -->
+    <div class="pagination-area mt-15 mb-50">
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                <% if (currentPage > 1) { %>
+                    <li class="page-item">
+                        <a class="page-link" href="?page=<%= currentPage - 1 %>">&laquo; Prev</a>
+                    </li>
+                <% } %>
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                    <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                        <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                    </li>
+                <% } %>
+                <% if (currentPage < totalPages) { %>
+                    <li class="page-item">
+                        <a class="page-link" href="?page=<%= currentPage + 1 %>">Next &raquo;</a>
+                    </li>
+                <% } %>
             </ul>
         </nav>
-    </div> -->
+    </div>
 </section>
+
+
 
 <script>
 function blockOrUnblock(userId) {

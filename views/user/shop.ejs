@@ -1,6 +1,19 @@
 <%- include('header') %>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
     <style>
+        .offer-tag {
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            background-color: rgb(198, 22, 22);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 10;
+        }
+
         /* Style for small screens */
         @media (max-width: 768px) {
 
@@ -64,9 +77,7 @@
             /* Adjust the price styling */
             .product__item__text h5 {
                 font-size: 14px;
-                /* Decrease the font size for price */
                 margin-bottom: 10px;
-                /* Add margin to separate from the cart button and stock */
             }
 
             /* Always show Add to Cart button below the price */
@@ -227,10 +238,10 @@
                                         <a href="/product/<%= product._id %>"><img
                                                 src="/uploads/<%= product.images[0] %>" alt=""></a>
                                         <% if (product.offer) { %>
-                                            <span class="offer-tag"
-                                                style="position: absolute; top: 5px; left: 10px; background-color: rgb(198, 22, 22); color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: bold; z-index: 10;">
+                                            <span class="offer-tag">
                                                 <%= product.offer.discountPercentage %>% Off
                                             </span>
+
                                             <% } %>
                                                 <ul class="product__hover">
                                                     <li>
@@ -250,15 +261,22 @@
                                         <a class="add-cart" onclick="Addtocart('<%= product._id %>')">+ Add To Cart</a>
 
                                         <h5>
-                                            <% if (product.offerPrice !==null) { %>
-                                                <small style="text-decoration: line-through; opacity: 70%;">₹<%=
-                                                        product.price %></small>
-                                                <span style="padding-left: 7px;"> ₹<%= product.offerPrice.toFixed(2) %>
-                                                </span>
-                                                <% } else { %>
+                                            <% if (product.offerPrice !== null) { %>
+                                                <div style="text-decoration: line-through; color: #888; font-size: 14px;">
                                                     ₹<%= product.price %>
-                                                        <% } %>
+                                                </div>
+                                                <div style="color: #C61616; font-size: 18px; font-weight: bold;">
+                                                    ₹<%= product.offerPrice.toFixed(2) %>
+                                                </div>
+                                            <% } else { %>
+                                                <div>
+                                                    ₹<%= product.price %>
+                                                </div>
+                                            <% } %>
                                         </h5>
+                                        
+
+
                                         <div class="product__color__select">
                                             <span>Stock:</span>
                                             <% if (product.stock===0) { %>
@@ -346,7 +364,13 @@
                                 <div class="product__item__text">
                                     <h6>${product.name}</h6>
                                     <a class="add-cart" onclick="Addtocart('${product._id}')">+ Add To Cart</a>
-                                    <h5>${product.offerPrice !== null ? `<small style="text-decoration: line-through; opacity: 70%;">₹${product.price}</small> <span style="padding-left: 7px;"> ₹${product.offerPrice.toFixed(2)}</span>` : `₹${product.price}`}</h5>
+                                    <h5> ${product.offerPrice !== null? `<div><small style="text-decoration: line-through; opacity: 70%;">₹${product.price}</small></div><div><span style="font-weight: bold; color: #FF5722;">₹${product.offerPrice.toFixed(2)}</span></div>`: `₹${product.price}` }</h5>  
+
+
+
+                                     
+
+
                                     <div class="product__color__select">
                                         <span>Stock:</span>
                                         ${getStockStatus(product.stock)}
@@ -425,7 +449,7 @@
                 // Handle search form submission
                 $('#searchForm').submit(function (e) {
                     e.preventDefault();
-                     searchQuery = $('#searchInput').val();
+                    searchQuery = $('#searchInput').val();
                     currentPage = 1;
                     loadProducts(currentPage, currentCategory, currentSort, searchQuery);
                 });

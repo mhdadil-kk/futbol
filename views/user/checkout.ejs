@@ -9,6 +9,10 @@
             color: red;
             font-size: 12px;
         }
+        .couponToggle:hover{
+            color: black;
+
+        }
     </style>
     <!-- Breadcrumb Section Begin -->
     <section class="breadcrumb-option">
@@ -40,7 +44,7 @@
                             <div class="cart__discount">
                                 <h6>Discount codes</h6>
                                 <div id="coupon-section">
-                                    <a href="" id="couponToggle">Have a coupon? Click here to enter your code</a>
+                                    <a href="#" id="couponToggle" >Have a coupon? Click here to enter your code</a>
                                     <div id="couponInput" style="display:none;">
                                         <input type="text" id="couponCodeInput" class="form-control mt-2"
                                             placeholder="Enter coupon code">
@@ -48,10 +52,12 @@
                                             class="btn btn-dark mt-2">Apply</button>
                                         <button type="button" id="removeCouponBtn" class="btn btn-danger mt-2"
                                             style="display:none;">Remove Coupon</button>
+                                            <button type="button" id="showCouponsBtn" class="btn btn-warning mt-2">Show Available
+                                                Coupons</button>
+                                        
                                     </div>
                                 </div>
-                                <button type="button" id="showCouponsBtn" class="btn btn-secondary mt-3">Show Available
-                                    Coupons</button>
+                                
                             </div>
 
                             <h6 class="checkout__title">Select Shipping Address</h6>

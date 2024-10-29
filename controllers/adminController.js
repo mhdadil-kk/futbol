@@ -178,14 +178,32 @@ const yearlysales = async (req, res) => {
 
 
 
-  const loadUserList = async(req,res)=>{
-    try{
-      const Users = await User.find({isAdmin:false})
-      res.render('admin/users-list.ejs' ,{Users})
-    }catch(error){
-      console.log(error)
+const loadUserList = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1; // Current page
+        const limit = 10; // Number of users per page
+        const skip = (page - 1) * limit;
+
+        // Fetch total number of documents for calculating total pages
+        const totalUsers = await User.countDocuments({ isAdmin: false });
+        const totalPages = Math.ceil(totalUsers / limit);
+
+        // Fetch paginated users
+        const users = await User.find({ isAdmin: false })
+            .skip(skip)
+            .limit(limit);
+
+        res.render('admin/users-list.ejs', {
+            users,
+            currentPage: page,
+            totalPages
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
     }
-  }
+};
+
 
   const blockUnblockUser = async (req, res) => {
     try {
