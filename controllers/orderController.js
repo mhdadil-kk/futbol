@@ -18,23 +18,38 @@ const razorpayInstance = new Razorpay({
 
 const loadOrderList = async (req, res) => {
     try {
-        const userId = req.session.user_id ? req.session.user_id : null;// Use optional chaining to avoid errors if user is undefined
-
+        const userId = req.session.user_id ? req.session.user_id : null;
         if (!userId) {
             return res.status(400).send('User not authenticated');
         }
 
-        const orders = await Order.find({ user: userId }).sort({ orderDate: -1 }).exec();
+        // Set default page and limit if they are not provided in query parameters
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 5;
+        const skip = (page - 1) * limit;
 
-        if (!orders || orders.length === 0) {
-            return res.render('user/order', { orders: [] }); // Render with an empty list
-        }
+        // Fetch the orders with pagination
+        const orders = await Order.find({ user: userId })
+            .sort({ orderDate: -1 })
+            .skip(skip)
+            .limit(limit)
+            .exec();
 
-        res.render('user/order', { orders });
+        // Fetch total order count for pagination controls
+        const totalOrders = await Order.countDocuments({ user: userId });
+        const totalPages = Math.ceil(totalOrders / limit);
+
+        res.render('user/order', {
+            orders,
+            currentPage: page,
+            totalPages,
+            limit
+        });
     } catch (error) {
         res.status(500).send('Internal server error');
     }
 };
+
 
 
 

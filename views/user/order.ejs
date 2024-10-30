@@ -158,31 +158,60 @@
 <div class="container">
     <h2>Order History</h2>
 
-    <% orders.forEach(order => { %>
-        <div class="order-card">
-            <div class="order-header">
-                <div class="order-id">
-                    Order #<%= order._id ? String(order._id).slice(-5).toUpperCase() : 'N/A' %>
+    <% if (orders.length > 0) { %>
+        <% orders.forEach(order => { %>
+            <div class="order-card">
+                <div class="order-header">
+                    <div class="order-id">
+                        Order #<%= order._id ? String(order._id).slice(-5).toUpperCase() : 'N/A' %>
+                    </div>
+                    <div class="order-date">
+                        <i class="fas fa-calendar-alt"></i> 
+                        <%= order.orderDate ? new Date(order.orderDate).toISOString().replace('T', ' ').substring(0, 16) : 'N/A' %>
+                    </div>
                 </div>
-                <div class="order-date">
-                    <i class="fas fa-calendar-alt"></i> 
-                    <%= order.orderDate ? new Date(order.orderDate).toISOString().replace('T', ' ').substring(0, 16) : 'N/A' %>
+        
+                <div class="order-body">
+                    <div class="order-info">
+                        <span class="order-status">
+                            <i class="fas fa-check-circle status-icon <%= order.status === 'Cancelled' ? 'cancelled' : order.status === 'Pending' ? 'pending' : '' %>"></i> 
+                            <%= order.status || 'Processing' %>
+                        </span>
+                        <span class="order-amount">₹<%= order.totalPrice.toFixed(2) %></span>
+                    </div>
+                    <a href="/order-details/<%= order._id %>" class="view-details-btn">View Details</a>
                 </div>
-                
             </div>
+        <% }) %>
+        
+        <nav aria-label="Order pagination">
+            <ul class="pagination justify-content-center mb-4">
+                <% if (currentPage > 1) { %>
+                    <li class="page-item">
+                        <a class="page-link" href="/orders?page=<%= currentPage - 1 %>&limit=<%= limit %>">Previous</a>
+                    </li>
+                <% } %>
     
-            <div class="order-body">
-                <div class="order-info">
-                    <span class="order-status">
-                        <i class="fas fa-check-circle status-icon <%= order.status === 'Cancelled' ? 'cancelled' : order.status === 'Pending' ? 'pending' : '' %>"></i> 
-                        <%= order.status || 'Processing' %>
-                    </span>
-                    <span class="order-amount">₹<%= order.totalPrice.toFixed(2) %></span>
-                </div>
-                <a href="/order-details/<%= order._id %>" class="view-details-btn">View Details</a>
-            </div>
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                    <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                        <a class="page-link" href="/orders?page=<%= i %>&limit=<%= limit %>"><%= i %></a>
+                    </li>
+                <% } %>
+    
+                <% if (currentPage < totalPages) { %>
+                    <li class="page-item">
+                        <a class="page-link" href="/orders?page=<%= currentPage + 1 %>&limit=<%= limit %>">Next</a>
+                    </li>
+                <% } %>
+            </ul>
+        </nav>
+    <% } else { %>
+        <div class="no-orders-message text-center">
+            <p>No orders found. It looks like you haven’t placed any orders yet!</p>
+            <a href="/" class="btn btn-primary mt-2 mb-3">Shop Now</a>
         </div>
-    <% }) %>
+    <% } %>
 </div>
+
 
 <%- include('footer') %>
