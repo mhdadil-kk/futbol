@@ -672,24 +672,34 @@ const returnReq = async (req, res) => {
         } else if (action === 'Returned') {
             returnOrder.products[productIndex].status = 'returned'; 
 
+            // Adjust stock quantity if the product is returned
+            const returnedProduct = await Product.findById(productId);
+            if (!returnedProduct) {
+                return res.status(404).json({ success: false, message: 'Product not found in database.' });
+            }
+
+            // Increase the product stock by the quantity returned
+            const returnQuantity = returnOrder.products[productIndex].quantity || 1; // Assuming quantity field
+            returnedProduct.stock += returnQuantity;
+            await returnedProduct.save();
+
             if (order.paymentMethod === 'Razorpay' || order.paymentMethod === 'Wallet') {
                 const user = await User.findById(order.user);
                 if (!user) {
                     return res.status(404).json({ success: false, message: 'User not found.' });
                 }
 
-                const product = order.products.find(item => item.product.toString() === productId);
-                if (!product) {
+                const productInOrder = order.products.find(item => item.product.toString() === productId);
+                if (!productInOrder) {
                     return res.status(404).json({ success: false, message: 'Product not found in the order.' });
                 }
 
-                user.wallet_balance = (user.wallet_balance || 0) + product.price;
-
-                // Save the updated user details
+                user.wallet_balance = (user.wallet_balance || 0) + productInOrder.price;
                 await user.save();
+
                 const walletTransaction = new Wallet({
                     user: order.user,
-                    amount: product.price,
+                    amount: productInOrder.price,
                     payment_type: 'Credit',
                 });
                 await walletTransaction.save();
@@ -701,12 +711,13 @@ const returnReq = async (req, res) => {
 
         await returnOrder.save();
 
-        return res.status(200).json({ success: true, message: `Return request ${action}ed successfully OK.` });
+        return res.status(200).json({ success: true, message: `Return request ${action}ed successfully.` });
     } catch (error) {
         console.error('Error processing return request:', error);
         return res.status(500).json({ success: false, message: 'Internal server error.' });
     }
 };
+
 
 
 
