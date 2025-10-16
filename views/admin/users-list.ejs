@@ -1,0 +1,150 @@
+<%- include("adheader") %> 
+<section class="content-main">
+    <div class="content-header">
+        <h2 class="content-title">Users List</h2>
+    </div>
+    <div class="card mb-4">
+        <header class="card-header"></header>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Registered</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (users && users.length > 0) { %>
+                            <% users.forEach((user, index) => { %>
+                                <tr data-id="<%= user._id %>">
+                                    <td width="40%">
+                                        <a href="#" class="itemside d-flex align-items-center">
+                                            <div class="info pl-3">
+                                                <h6 class="mb-0 title"><%= user.name %></h6>
+                                                <small class="text-muted">User ID: <%= index + 1 %></small>
+                                            </div>
+                                        </a>
+                                    </td>
+                                    <td><%= user.email %></td>
+                                    <td>
+                                        <% if (!user.is_blocked) { %>
+                                            <span class="badge rounded-pill alert-success" id="status-<%= user._id %>">Active</span>
+                                        <% } else { %>
+                                            <span class="badge rounded-pill alert-danger" id="status-<%= user._id %>">Inactive</span>
+                                        <% } %>
+                                    </td>
+                                    <td><%= new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></td>
+                                    <td class="text-end">
+                                        <div class="dropdown">
+                                            <a href="#" data-bs-toggle="dropdown" class="btn btn-light rounded btn-sm font-sm">
+                                                <i class="material-icons md-more_horiz"></i>
+                                            </a>
+                                            <div class="dropdown-menu">
+                                                <% if (!user.is_blocked) { %>
+                                                    <a class="dropdown-item text-danger" onclick="blockOrUnblock('<%= user._id %>', 'Block')" id="block-<%= user._id %>">Block</a>
+                                                <% } else { %>
+                                                    <a class="dropdown-item text-success" onclick="blockOrUnblock('<%= user._id %>', 'Unblock')" id="block-<%= user._id %>">Unblock</a>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="5" class="text-center">No users found</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pagination -->
+    <div class="pagination-area mt-15 mb-50">
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                <% if (currentPage > 1) { %>
+                    <li class="page-item">
+                        <a class="page-link" href="?page=<%= currentPage - 1 %>">&laquo; Prev</a>
+                    </li>
+                <% } %>
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                    <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                        <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                    </li>
+                <% } %>
+                <% if (currentPage < totalPages) { %>
+                    <li class="page-item">
+                        <a class="page-link" href="?page=<%= currentPage + 1 %>">Next &raquo;</a>
+                    </li>
+                <% } %>
+            </ul>
+        </nav>
+    </div>
+</section>
+
+
+
+<script>
+function blockOrUnblock(userId) {
+    Swal.fire({
+        title: "Do you want to change this user's status?",
+        showCancelButton: true,
+        confirmButtonText: 'Yes',
+        customClass: {
+            title: 'swal2-title',
+            htmlContainer: 'swal2-html-container'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            axios.post(`/admin/blockUnblockUser?id=${userId}`)
+                .then((response) => {
+                    console.log('Server Response:', response.data);  // Debugging line
+
+                    if (response.data.success === 1) {
+                        const button = document.getElementById(`block-${userId}`);
+                        const statusBadge = document.getElementById(`status-${userId}`);
+
+                        if (button.classList.contains('text-danger')) {
+                            button.classList.remove('text-danger');
+                            button.classList.add('text-success');
+                            button.innerHTML = 'Unblock';
+
+                            statusBadge.classList.remove('alert-success');
+                            statusBadge.classList.add('alert-danger');
+                            statusBadge.innerHTML = 'Inactive';
+                        } else {
+                            button.classList.remove('text-success');
+                            button.classList.add('text-danger');
+                            button.innerHTML = 'Block';
+
+                            statusBadge.classList.remove('alert-danger');
+                            statusBadge.classList.add('alert-success');
+                            statusBadge.innerHTML = 'Active';
+                        }
+
+                        Swal.fire("Changed!", "", "success");  // Moved inside the success block
+                    } else {
+                        Swal.fire("Failed to change status", "", "error");
+                    }
+                })
+                .catch((error) => {
+                
+                    Swal.fire("An error occurred", "", "error");
+                });
+        } else {
+            Swal.fire("No changes were made", "", "info");
+        }
+    });
+}
+
+
+</script>
+
+<%- include('adfooter') %>

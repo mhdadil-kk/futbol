@@ -1,0 +1,275 @@
+<%- include('adheader') %>
+
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+    .content-main {
+        padding: 20px;
+        background-color: white;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .summary {
+        margin-top: 20px;
+        font-weight: bold;
+    }
+</style>
+
+<section class="content-main">
+    <div class="content-header d-flex justify-content-between align-items-center">
+        <h2 class="content-title">Sales Report</h2>
+    </div>
+
+    <!-- Filter Section -->
+    <section class="mb-4">
+        <h3>Generate Sales Report</h3>
+        <form method="POST" id="reportForm">
+            <div class="form-row">
+                <div class="col">
+                    <label for="dateRange">Select Date Range</label>
+                    <select id="dateRange" name="dateRange" class="form-control">
+                        <option value="today">Today</option>
+                        <option value="yesterday">Yesterday</option>
+                        <option value="lastWeek">Last Week</option>
+                        <option value="lastMonth">Last Month</option>
+                        <option value="lastYear">Last Year</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                <div class="col" id="customDateRange" style="display: none;">
+                    <label for="startDate">Start Date</label>
+                    <input type="date" id="startDate" name="startDate" class="form-control">
+                    <label for="endDate">End Date</label>
+                    <input type="date" id="endDate" name="endDate" class="form-control">
+                </div>
+                <div id="validationMessage" style="color: red; display: none;"></div>
+
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Generate Report</button>
+
+            <div class="d-flex justify-content-end mt-4">
+                <a href="javascript:void(0);" class="btn btn-success mr-2" id="downloadPdf">Download PDF</a>
+                <a href="javascript:void(0);" class="btn btn-success" id="downloadExcel">Download Excel</a>
+            </div>
+        </form>
+    </section>
+
+    <!-- Summary Section -->
+    <div class="summary">
+        <p>Total Sales Count: <span id="totalSalesCount">0</span></p>
+        <p>Total Order Amount: ₹ <span id="totalOrderAmount">0.00</span></p>
+        <p>Total Discount: ₹ <span id="totalDiscount">0.00</span></p>
+    </div>
+
+    <!-- Sales Report Table -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Order ID</th>
+                    <th>Billing Name</th>
+                    <th>Date</th>
+                    <th>Offer Deduction</th>
+                    <th>Coupon Deduction</th>
+                    <th>Total</th>
+                    <th>Payment Method</th>
+                </tr>
+            </thead>
+            <tbody id="salesReportBody">
+            </tbody>
+        </table>
+    </div>
+    <p id="noDataMessage" style="text-align: center; display: none;">No data available</p>
+
+</section>
+
+<%- include('adfooter') %>
+
+<script>
+    let salesReportBodyData = []; // Store the sales report data globally
+
+    // Fetch today's report on page load
+    window.addEventListener('DOMContentLoaded', async function() {
+        document.getElementById('dateRange').value = 'today';
+        setMaxDate(); // Set maximum date to today
+        await fetchSalesReport(); // Load today's sales report
+    });
+
+    // Set the maximum date to today's date for date inputs
+    function setMaxDate() {
+        const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+        document.getElementById('startDate').max = today;
+        document.getElementById('endDate').max = today;
+    }
+
+    // Toggle custom date range input fields
+    document.getElementById('dateRange').addEventListener('change', function() {
+        const customDateRange = document.getElementById('customDateRange');
+        customDateRange.style.display = this.value === 'custom' ? 'block' : 'none';
+        clearValidationMessage();
+    });
+
+    // Handle form submission for report generation
+    document.getElementById('reportForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        if (!validateDateRange()) {
+            return; // Stop if validation fails
+        }
+
+        await fetchSalesReport(); // Fetch report data based on selected date range
+    });
+
+    // Validate custom date range
+    function validateDateRange() {
+        const dateRange = document.getElementById('dateRange').value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        // Check if custom date range is selected
+        if (dateRange === 'custom') {
+            if (!startDate || !endDate) {
+                displayValidationMessage('Both start and end dates are required for custom date range.');
+                return false;
+            }
+
+            if (new Date(startDate) > new Date(endDate)) {
+                displayValidationMessage('Start date cannot be later than end date.');
+                return false;
+            }
+        }
+        clearValidationMessage();
+        return true;
+    }
+
+    // Display validation message
+    function displayValidationMessage(message) {
+        const validationMessage = document.getElementById('validationMessage');
+        validationMessage.textContent = message;
+        validationMessage.style.display = 'block';
+    }
+
+    // Clear validation message
+    function clearValidationMessage() {
+        const validationMessage = document.getElementById('validationMessage');
+        validationMessage.style.display = 'none';
+    }
+
+    // Fetch sales report based on selected date range
+    async function fetchSalesReport() {
+        const formElement = document.getElementById('reportForm');
+        const formData = new FormData(formElement);
+
+        const data = {};
+        formData.forEach((value, key) => {
+            data[key] = value; // Convert FormData to a plain object
+        });
+
+        try {
+            const response = await fetch('/admin/sales-report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+
+            if (response.ok) {
+                const reportData = await response.json();
+                console.log('Report Data:', reportData); // Debugging log for report data
+                renderSalesReport(reportData);
+                salesReportBodyData = reportData; // Store the data globally
+            } else {
+                console.error('Failed to fetch sales report');
+            }
+        } catch (error) {
+            console.error('Error fetching sales report:', error);
+        }
+    }
+
+    // Render sales report data in the table
+    function renderSalesReport(reportData) {
+        const salesReportBody = document.getElementById('salesReportBody');
+        salesReportBody.innerHTML = ''; 
+        if (reportData.length === 0) {
+        noDataMessage.style.display = 'block'; // Show "No data" message
+        document.getElementById('totalSalesCount').textContent = '0';
+        document.getElementById('totalOrderAmount').textContent = '0.00';
+        document.getElementById('totalDiscount').textContent = '0.00';
+        return;
+    } else {
+        noDataMessage.style.display = 'none'; // Hide "No data" message
+    }
+
+        let totalSalesCount = reportData.length;
+        let totalOrderAmount = 0;
+        let totalDiscount = 0;
+
+        reportData.forEach(order => {
+            totalOrderAmount += order.total;
+            totalDiscount += (order.offerDeduction || 0); // Handle offer deduction
+
+            const row = `
+                <tr>
+                    <td>${order.orderId}</td>
+                    <td>${order.billingName}</td>
+                    <td>${order.date}</td>
+                    <td>₹ ${order.offerDiscound ? order.offerDiscound : '0.00'}</td>
+                    <td>₹ ${order.couponDiscound ? order.couponDiscound : '0.00'}</td>
+                    <td>₹ ${order.total}</td>
+                    <td>${order.paymentMethod}</td>
+                </tr>
+            `;
+            salesReportBody.insertAdjacentHTML('beforeend', row);
+        });
+
+        document.getElementById('totalSalesCount').textContent = totalSalesCount;
+        document.getElementById('totalOrderAmount').textContent = totalOrderAmount.toFixed(2);
+        document.getElementById('totalDiscount').textContent = totalDiscount.toFixed(2);
+    }
+
+    // Event listeners for download buttons
+    document.getElementById('downloadPdf').addEventListener('click', () => downloadReport('pdf'));
+    document.getElementById('downloadExcel').addEventListener('click', () => downloadReport('excel'));
+
+    // Download the sales report in the selected format (PDF or Excel)
+    function downloadReport(format) {
+        console.log(`Download link clicked: ${format}`);
+        console.log('Sales Report Data:', salesReportBodyData);
+
+        fetch(`/admin/sales-report/download/${format}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                reportData: salesReportBodyData, // Pass the sales report data
+            }),
+        })
+        .then(response => {
+            console.log('Download response:', response);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.blob(); // Get the blob data for the file
+        })
+        .then(blob => {
+            console.log('Blob received:', blob);
+
+            // Create a temporary <a> tag to trigger the download
+            const link = document.createElement('a');
+            const url = window.URL.createObjectURL(blob);
+            link.href = url;
+            link.download = `sales-report.${format}`; // Set the download attribute with the filename
+            document.body.appendChild(link);
+            link.click(); // Programmatically click the link to trigger the download
+            link.remove(); // Remove the link from the DOM after the download starts
+            window.URL.revokeObjectURL(url); // Clean up the URL object
+        })
+        .catch(error => {
+            console.error('Error downloading report:', error);
+        });
+    }
+</script>
+

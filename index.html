@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Elevate Zoom</title>
+    <link rel="stylesheet" href="public/css/style.css"> <!-- Your CSS -->
+    <script src="public/js/jquery-3.3.1.min.js"></script>
+    <script src="public/js/elevateZoom.min.js"></script>
+</head>
+<style>
+    img{
+    width: 500px;
+    }
+</style>
+<body>
+    <img id="zoom_01" src="public/uploads/1724923036077.png" data-zoom-image="public/uploads/1724923036077.png" alt="Product Image">
+    <script>
+        $(document).ready(function() {
+            $("#zoom_01").elevateZoom({
+                zoomType: "inner",
+                cursor: "crosshair",
+                zoomWindowFadeIn: 500,
+                zoomWindowFadeOut: 750
+            });
+        });
+    </script>
+</body>
+</html>

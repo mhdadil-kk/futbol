@@ -1,0 +1,292 @@
+<%- include('header') %>
+    <!-- Include Toastr CSS and JS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+
+    <!-- Shop Details Section Begin -->
+    <style>
+        .product__thumb__pic {
+            margin-bottom: 20px;
+            /* Space between each thumbnail */
+        }
+
+        .product__details__text {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        .offer-price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #d9534f;
+            /* Bootstrap's danger color for visibility */
+        }
+
+        .original-price {
+            font-size: 16px;
+            color: #888;
+            text-decoration: line-through;
+            margin-left: 10px;
+        }
+
+        .discount-percentage {
+            font-size: 14px;
+            color: #d9534f;
+            /* Same color as offer price for consistency */
+            margin-left: 10px;
+        }
+
+        .product__details__cart__option {
+            margin-top: 20px;
+        }
+
+        .product__details__last__option ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .product__details__last__option ul li {
+            margin-bottom: 10px;
+        }
+    </style>
+
+    <section class="shop-details">
+        <div class="product__details__pic">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="product__details__breadcrumb">
+                            <a href="/">Home</a>
+                            <a href="/shop">Shop</a>
+                            <span>Product Details</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <!-- Product Images Section (Left Side) -->
+                    <div class="col-lg-6 col-md-6">
+                        <div class="row">
+                            <div class="col-lg-3 col-md-3">
+                                <ul class="nav nav-tabs" role="tablist">
+                                    <% product.images.forEach((image, index)=> { %>
+                                        <li class="nav-item">
+                                            <a class="nav-link <%= index === 0 ? 'active' : '' %>" data-toggle="tab"
+                                                href="#tabs-<%= index + 1 %>" role="tab">
+                                                <div class="product__thumb__pic set-bg">
+                                                    <img src="/uploads/<%= image %>"
+                                                        alt="Product Thumbnail <%= index + 1 %>">
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <% }); %>
+                                </ul>
+                            </div>
+
+                            <div class="col-lg-9 col-md-9">
+                                <div class="tab-content">
+                                    <% product.images.forEach((image, index)=> { %>
+                                        <div class="tab-pane <%= index === 0 ? 'active' : '' %>"
+                                            id="tabs-<%= index + 1 %>" role="tabpanel">
+                                            <div class="product__details__pic__item">
+                                                <img onmouseover="imagezoom()" src="/uploads/<%= image %>" alt="Product Image <%= index + 1 %>"
+                                                    class="imgzoom">
+                                            </div>
+                                        </div>
+                                        <% }); %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Details Section (Right Side) -->
+                    <div class="col-lg-6 col-md-6">
+                        <div class="product__details__text">
+                            <h4>
+                                <%= product.name %>
+                            </h4>
+
+                            <!-- Display Original Price and Offer Price -->
+                            <% if (product.offerPrice !==null) { %>
+                                <h3 class="offer-price">₹<%= product.offerPrice.toFixed(2) %>
+                                </h3>
+                                <h5 class="original-price">₹<%= product.price.toFixed(2) %>
+                                </h5>
+                                <span class="discount-percentage">(<%= product.discountPercentage.toFixed(0) %>%
+                                        OFF)</span>
+                                <% } else { %>
+                                    <h3 class="offer-price">₹<%= product.price.toFixed(2) %>
+                                    </h3>
+                                    <% } %>
+
+                                        <p>
+                                            <%= product.description %>
+                                        </p>
+
+
+                                        <div class="product__details__cart__option">
+                                            <button id="add-to-cart-btn"   onclick="Addtocart('<%= product._id %>')" class="primary-btn">Add to Cart</button>
+                                        </div>
+
+                                        <div class="product__details__last__option">
+                                            <ul>
+                                                <li><span>Category:</span>
+                                                    <%= product.category.name %>
+                                                </li>
+                                                <li><span>Stock:</span>
+                                                    <% if (product.stock===0) { %>
+                                                        <span style="color: red;">Out of Stock</span>
+                                                        <% } else if (product.stock> 0 && product.stock < 10) { %>
+                                                                <span style="color: orange;">Limited Stock</span>
+                                                                <% } else { %>
+                                                                    <span style="color: green;">Available</span>
+                                                                    <% } %>
+                                                </li>
+                                            </ul>
+                                        </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </section>
+    <!-- Shop Details Section End -->
+
+    <!-- Related Section Begin -->
+    <section class="related spad">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h3 class="related-title">Related Products</h3>
+                </div>
+            </div>
+            <div class="row">
+                <% Products.forEach((Product)=> { %>
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="product__item">
+                            <div class="product__item__pic">
+                                <a href="/product/<%= Product._id %>"><img src="/uploads/<%= Product.images[0] %>"
+                                        alt=""></a>
+                                <ul class="product__hover">
+                                    <li><a href="#"><img src="/img/icon/heart.png" alt=""></a></li>
+                                    <li><a href="#"><img src="/img/icon/search.png" alt=""></a></li>
+                                </ul>
+                            </div>
+                            <div class="product__item__text">
+                                <h6>
+                                    <%= Product.name %>
+                                </h6>
+                                <h5>₹<%= Product.price.toFixed(2) %>
+                                </h5>
+                            </div>
+                        </div>
+                    </div>
+                    <% }); %>
+            </div>
+        </div>
+    </section>
+    <!-- Related Section End -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <%- include('footer') %>
+
+        <script>
+
+     function imagezoom(){
+        $('.imgzoom').elevateZoom({
+                    zoomType: "lens",
+                    lensShape: "square",
+                    lensSize: 200,
+                    scrollZoom: true,
+                    cursor: "crosshair",
+                    zoomWindowFadeIn: 200,
+                    zoomWindowFadeOut: 200,
+                    lensFadeIn: 200,
+                    lensFadeOut: 200
+                });
+     }
+
+            $(document).ready(function () {
+
+         
+                toastr.options = {
+                    "closeButton": true,
+                    "debug": false,
+                    "newestOnTop": false,
+                    "progressBar": true,
+                    "positionClass": "toast-top-right",
+                    "preventDuplicates": false,
+                    "onclick": null,
+                    "showDuration": "300",
+                    "hideDuration": "1000",
+                    "timeOut": "5000",
+                    "extendedTimeOut": "1000",
+                    "showEasing": "swing",
+                    "hideEasing": "linear",
+                    "showMethod": "fadeIn",
+                    "hideMethod": "fadeOut"
+                };
+
+                
+            });
+
+            function Addtocart(productId) {
+                    event.preventDefault();
+                    const quantity = 1;
+                    fetch('/add-to-cart', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            productId: productId,
+                            quantity: quantity
+                        })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Product added to cart, show success SweetAlert
+                                Swal.fire({
+                                    title: 'Product Added to Cart!',
+                                    text: "Do you want to view your cart or continue shopping?",
+                                    icon: 'success',
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Go to Cart',
+                                    cancelButtonText: 'Continue Shopping'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        window.location.href = '/cart'; // Redirect to cart page
+                                    }
+                                });
+                            } else {
+                                // Check if the failure is due to user not being logged in
+                                if (data.message == 'User not logged in') {
+                                    Swal.fire({
+                                        title: 'Not Logged In',
+                                        text: "You need to log in to add products to your cart.",
+                                        icon: 'warning',
+                                        showCancelButton: true,
+                                        confirmButtonText: 'Log In',
+                                        cancelButtonText: 'Cancel'
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            window.location.href = '/login'; // Redirect to login page
+                                        }
+                                    });
+                                } else if (data.message == 'Product Out of stock') {
+                                    // Show an Out of Stock message using Toastr
+                               
+                                    toastr.warning('This product is currently out of stock.');
+                                } else {
+                                    Swal.fire('Error', 'Failed to add the product to the cart. Please try again.', 'error');
+                                }
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                };
+
+        </script>

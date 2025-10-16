@@ -1,0 +1,146 @@
+<%- include('adheader') %>
+
+<section class="content-main">
+    <div class="content-header">
+        <div>
+            <h2 class="content-title card-title">Edit Category</h2>
+            <p>Update the category details</p>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <div class="row justify-content-center">
+                <div class="col-md-6"> <!-- Adjust the width as needed -->
+                    <form method="post" action="/admin/editcategory/<%= category._id %>" onsubmit="return validateForm()">
+                        <% if (typeof errorMessage !== 'undefined') { %>
+                            <p style="color: red;" class="d-inline-flex p-2"><%= errorMessage %>*</p>
+                        <% } %>
+                        <div class="mb-4">
+                            <label for="category_name" class="form-label">Name</label>
+                            <input type="text" class="form-control" name="name" id="category_name" value="<%= category.name %>" />
+                            <p id="nameError" class="text-danger" style="display: none;"></p> <!-- Error message for name -->
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" id="description"><%= category.description %></textarea>
+                            <p id="descriptionError" class="text-danger" style="display: none;"></p> <!-- Error message for description -->
+                        </div>
+                        <input type="hidden" name="id" value="<%= category._id %>">
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Update category</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- .row // -->
+        </div>
+        <!-- card body .// -->
+    </div>
+    <!-- card .// -->
+</section>
+
+<script>
+function validateForm() {
+    const name = document.getElementById('category_name').value;
+    const description = document.getElementById('description').value;
+    const nameError = document.getElementById('nameError');
+    const descriptionError = document.getElementById('descriptionError');
+
+    // Reset previous error messages
+    nameError.style.display = 'none';
+    descriptionError.style.display = 'none';
+
+    // Regular expression to check for special characters
+    const specialCharPattern = /[!@#$%^&*(),.?":{}|<>+=-]/;
+    // Regular expression to check for multiple spaces
+    const multipleSpacesPattern = /\s{2,}/;
+
+    // Validate category name
+    if (name === '') {
+        nameError.textContent = 'Please enter a category name. This field cannot be empty.';
+        nameError.style.display = 'block';
+        return false;
+    }
+    if (name.trim() === '') { // Check for leading/trailing spaces
+        nameError.textContent = 'The category name cannot be empty or consist only of spaces.';
+        nameError.style.display = 'block';
+        return false;
+    }
+    if (name.startsWith(' ')) {
+        nameError.textContent = 'The category name cannot start with a space. Please remove any leading spaces.';
+        nameError.style.display = 'block';
+        return false;
+    }
+    if (name.endsWith(' ')) {
+        nameError.textContent = 'The category name cannot end with a space. Please remove any trailing spaces.';
+        nameError.style.display = 'block';
+        return false;
+    }
+    if (multipleSpacesPattern.test(name)) {
+        nameError.textContent = 'The category name cannot contain consecutive spaces. Please correct this.';
+        nameError.style.display = 'block';
+        return false;
+    }
+    if (name.length < 3) {
+        nameError.textContent = 'The category name must be at least 3 characters long. Please provide a longer name.';
+        nameError.style.display = 'block';
+        return false;
+    }
+    if (name.length > 50) {
+        nameError.textContent = 'The category name cannot exceed 50 characters. Please shorten the name.';
+        nameError.style.display = 'block';
+        return false;
+    }
+    if (specialCharPattern.test(name)) {
+        nameError.textContent = 'The category name cannot contain special characters (e.g., !@#$%^&*). Please use only letters and numbers.';
+        nameError.style.display = 'block';
+        return false;
+    }
+
+    // Validate description
+    if (description === '') {
+        descriptionError.textContent = 'Please enter a description. This field cannot be empty.';
+        descriptionError.style.display = 'block';
+        return false;
+    }
+    if (description.trim() === '') { // Check for leading/trailing spaces
+        descriptionError.textContent = 'The description cannot be empty or consist only of spaces.';
+        descriptionError.style.display = 'block';
+        return false;
+    }
+    if (description.startsWith(' ')) {
+        descriptionError.textContent = 'The description cannot start with a space. Please remove any leading spaces.';
+        descriptionError.style.display = 'block';
+        return false;
+    }
+    if (description.endsWith(' ')) {
+        descriptionError.textContent = 'The description cannot end with a space. Please remove any trailing spaces.';
+        descriptionError.style.display = 'block';
+        return false;
+    }
+    if (multipleSpacesPattern.test(description)) {
+        descriptionError.textContent = 'The description cannot contain consecutive spaces. Please correct this.';
+        descriptionError.style.display = 'block';
+        return false;
+    }
+    if (description.length < 10) {
+        descriptionError.textContent = 'The description must be at least 10 characters long. Please provide more detail.';
+        descriptionError.style.display = 'block';
+        return false;
+    }
+    if (description.length > 200) {
+        descriptionError.textContent = 'The description cannot exceed 200 characters. Please shorten your description.';
+        descriptionError.style.display = 'block';
+        return false;
+    }
+    if (specialCharPattern.test(description)) {
+        descriptionError.textContent = 'The description cannot contain special characters (e.g., !@#$%^&*). Please use only letters and numbers.';
+        descriptionError.style.display = 'block';
+        return false;
+    }
+
+    return true; // Form is valid
+}
+</script>
+
+<%- include('adfooter') %>

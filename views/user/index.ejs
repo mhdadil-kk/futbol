@@ -1,0 +1,268 @@
+<%- include('header') %>
+<style>
+    .hero__items {
+        background-size: cover; /* Ensures the background image covers the entire div */
+        background-position: center; /* Centers the image */
+        
+    }
+
+    .hero__text h6 {
+        font-size: 1.5rem; /* Adjust font size */
+        margin-bottom: 0.5rem; /* Space below */
+    }
+
+    .hero__text h2 {
+        font-size: 2rem; /* Adjust font size */
+        margin-bottom: 1rem; /* Space below */
+    }
+
+    .hero__text p {
+        font-size: 1rem; /* Adjust font size */
+        margin-bottom: 1rem; /* Space below */
+    }
+
+    .hero__social a {
+        font-size: 1.2rem; /* Social icons size */
+    }
+
+    @media (max-width: 768px) {
+        .primary-btn{
+            font-size: 10px;
+            padding: 6px 8px;
+            letter-spacing: 1;
+
+        }
+        .hero__items {
+        height: 350px;
+        }
+        .hero__text {
+            padding: 0px; /* Add padding for smaller devices */
+            text-align: start; /* Center text on small screens */
+        }
+
+        .hero__text h6 {
+            font-size: 1.1rem; /* Smaller heading for mobile */
+        }
+
+        .hero__text h2 {
+            font-size: 1.8rem; /* Smaller heading for mobile */
+            line-height:35px;
+        }
+
+        .hero__text p {
+            font-size: 0.5rem; /* Smaller paragraph for mobile */
+            line-height:12px;
+
+        }
+       .arrow_left ,.arrow_right {
+        display: none;
+       }
+        .hero__social {
+           display: none; /* Space above social icons */
+        }
+    }
+</style>
+    <!-- Hero Section Begin -->
+    <section class="hero">
+        <div class="hero__slider owl-carousel">
+            <div class="hero__items set-bg" data-setbg="img/hero/hero-1.png">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-xl-5 col-lg-7 col-md-8">
+                            <div class="hero__text">
+                                <h6>Engineered for Speed</h6>
+                                <h2>F50 Elite Fast Reborn Firm Ground Boots</h2>
+                                <p>Our Limited Collection F50 Fast Reborn reunites Messi with the adidas F50, re-engineered with lightweight materials and technology to match the pace of today’s game.</p>
+                                <a href="/product/6704c6dee8ef9d825b36b863" class="primary-btn">Shop now <span class="arrow_right"></span></a>
+                                <div class="hero__social">
+                                    <a href="#"><i class="fa fa-facebook"></i></a>
+                                    <a href="#"><i class="fa fa-twitter"></i></a>
+                                    <a href="#"><i class="fa fa-pinterest"></i></a>
+                                    <a href="#"><i class="fa fa-instagram"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="hero__items set-bg" data-setbg="img/hero/hero-2.jpg">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-xl-5 col-lg-7 col-md-8">
+                            <div class="hero__text">
+                                <h6>Summer Collection </h6>
+                                <h2>Fall - Winter Collections 2030</h2>
+                                <p>A specialist label creating luxury essentials. Ethically crafted with an unwavering commitment to exceptional quality.</p>
+                                <a href="/product/6704d46d9549e95687630ad0" class="primary-btn">Shop now <span class="arrow_right"></span></a>
+                                <div class="hero__social">
+                                    <a href="#"><i class="fa fa-facebook"></i></a>
+                                    <a href="#"><i class="fa fa-twitter"></i></a>
+                                    <a href="#"><i class="fa fa-pinterest"></i></a>
+                                    <a href="#"><i class="fa fa-instagram"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Hero Section End -->
+
+    <!-- Banner Section Begin -->
+    <section class="banner spad">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-7 offset-lg-4">
+                    <div class="banner__item">
+                        <div class="banner__item__pic">
+                            <img src="img/banner/banner-3.png" alt="">
+                        </div>
+                        <div class="banner__item__text">
+                            <h2>Shoes</h2>
+                            <a href="/shop">Shop now</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="banner__item banner__item--middle">
+                        <div class="banner__item__pic">
+                            <img id="md" src="img/banner/banner-2.jpg" alt="" >
+                        </div>
+                        <div class="banner__item__text">
+                            <h2>Football</h2>
+                            <a href="/shop">Shop now</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="banner__item banner__item--last">
+                        <div class="banner__item__pic">
+                            <img src="img/banner/banner-1.jpg" alt="">
+                        </div>
+                        <div class="banner__item__text">
+                            <h2>Jerseys</h2>
+                            <a href="/shop">Shop now</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Banner Section End -->
+
+<!-- Product Section Begin -->
+<section class="product spad">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <!-- Filter Controls -->
+                <ul class="filter__controls">
+                    <li class="active" data-filter="*">New Arrivals</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="row product__filter">
+            <% products.forEach(function(product) { %>
+                <div class="col-lg-3 col-md-6 col-sm-6 mix <%= product.category %>">
+                    <div class="product__item">
+                        <div class="product__item__pic">
+                           <a href="/product/<%= product._id %>"><img src="/uploads/<%= product.images[0] %>" alt="<%= product.name %>"  class="img-fluid" /></a> 
+                                <span class="label" style="background-color: rgb(160, 109, 43);">New</span>
+                        </div>
+                        <div class="product__item__text">
+                            <h6><%= product.name %></h6>
+                            <a href="#" class="add-cart" onclick="Addtocart('<%= product._id %>')">+ Add To Cart</a>
+                            <h5>₹<%= product.price %></h5>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+
+        <!-- See More / Shop Now Button with Inline Styles -->
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <a href="/shop"
+                   style="
+                        display: inline-block;
+                        padding: 10px 20px;
+                        background-color: #000000;
+                        color: #fff;
+                        border: none;
+                        border-radius: 5px;
+                        text-decoration: none;
+                        margin-top: 20px;
+                        transition: background-color 0.3s, color 0.3s, transform 0.3s, box-shadow 0.3s;
+                    "
+                   onmouseover="this.style.backgroundColor='#ff6600'; this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.2)'; this.style.transform='scale(1.05)';"
+                   onmouseout="this.style.backgroundColor='#000000'; this.style.boxShadow='none'; this.style.transform='scale(1)';">
+                    See More Products
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+    <%- include('footer') %>
+    <script>
+        function Addtocart(productId) {
+                    event.preventDefault();
+                    const quantity = 1;
+                    fetch('/add-to-cart', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            productId: productId,
+                            quantity: quantity
+                        })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Product added to cart, show success SweetAlert
+                                Swal.fire({
+                                    title: 'Product Added to Cart!',
+                                    text: "Do you want to view your cart or continue shopping?",
+                                    icon: 'success',
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Go to Cart',
+                                    cancelButtonText: 'Continue Shopping'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        window.location.href = '/cart'; // Redirect to cart page
+                                    }
+                                });
+                            } else {
+                                // Check if the failure is due to user not being logged in
+                                if (data.message == 'User not logged in') {
+                                    Swal.fire({
+                                        title: 'Not Logged In',
+                                        text: "You need to log in to add products to your cart.",
+                                        icon: 'warning',
+                                        showCancelButton: true,
+                                        confirmButtonText: 'Log In',
+                                        cancelButtonText: 'Cancel'
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            window.location.href = '/login'; // Redirect to login page
+                                        }
+                                    });
+                                } else if (data.message == 'Product Out of stock') {
+                                    // Show an Out of Stock message using Toastr
+                               
+                                    toastr.warning('This product is currently out of stock.');
+                                } else {
+                                    Swal.fire('Error', 'Failed to add the product to the cart. Please try again.', 'error');
+                                }
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                };
+    </script>
+
+
+ 

@@ -1,0 +1,97 @@
+<%- include('header') %>
+<div class="container mt-4 wishlist-container">
+    <h2>My Wishlist (<%= wishlist.product.length %>)</h2>
+    
+    <% if (wishlist.product.length === 0) { %>
+        <div class="text-center mt-5">
+            <h5>Your wishlist is currently empty.</h5>
+            <p>Browse our products and add your favorites to your wishlist.</p>
+            <a href="/shop" class="btn btn-primary">Shop Now</a>
+            <div class="mt-4"></div> <!-- Space below the button -->
+        </div>
+    <% } else { %>
+        <div class="list-group">
+            <% wishlist.product.forEach((item) => { %>
+                <div class="list-group-item d-flex justify-content-between align-items-center" id="item-<%= item._id %>">
+                    <a href="/product/<%= item._id %>">
+                        <img src="/uploads/<%= item.images[0] %>" alt="<%= item.name %>" class="img-thumbnail" style="width: 80px; height: 80px;">
+                    </a>
+                    <div class="ml-3 flex-grow-1">
+                        <h5 class="mb-1"><%= item.name %></h5>
+                        <p class="mb-1">Rating: <%= item.rating %> ★</p>
+                        <p class="mb-1 text-danger font-weight-bold">₹<%= item.price %> <span class="text-muted" style="text-decoration: line-through;">₹<%= item.originalPrice %></span> <%= item.discount %> off</p>
+                    </div>
+                    <div>
+                        <button class="btn  btn-sm" style="background-color: chocolate;" onclick="addToCart('<%= item._id %>', 1)">🛒</button>
+                        <button class="btn btn-danger btn-sm" onclick="removeItem('<%= item._id %>')">🗑️</button>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    <% } %>
+</div>
+
+<%- include('footer') %>
+
+<script>
+async function removeItem(productId) {
+    // Show confirmation dialog
+    const confirmation = await Swal.fire({
+        title: 'Are you sure?',
+        text: "Do you really want to remove this item from your wishlist?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, remove it!',
+        cancelButtonText: 'Cancel'
+    });
+
+    // If the user confirms the action
+    if (confirmation.isConfirmed) {
+        const response = await fetch(`/wishlist/remove/${productId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            const itemElement = document.getElementById(`item-${productId}`);
+            if (itemElement) {
+                itemElement.remove();
+                const wishlistCount = document.querySelector('h2');
+                wishlistCount.textContent = `My Wishlist (${document.querySelectorAll('.list-group-item').length})`;
+            }
+        } else {
+            alert('Failed to remove item from wishlist: ' + result.message);
+        }
+    }
+}
+
+// Function to add the item to the cart
+async function addToCart(productId, quantity) {
+    const response = await fetch('/add-to-cart', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ productId: productId, quantity: quantity })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+        Swal.fire({
+            title: 'Added to Cart!',
+            text: 'The item has been successfully added to your cart.',
+            icon: 'success',
+            confirmButtonText: 'OK'
+        });
+    } else {
+        alert('Failed to add item to cart: ' + result.message);
+    }
+}
+</script>

@@ -1,0 +1,179 @@
+<%- include('adheader') %>
+    <style>
+        .pagination .active .page-link {
+            background-color: #007bff;
+            /* Bootstrap primary color */
+            color: white;
+        }
+
+        .pagination .page-link {
+            color: #007bff;
+            /* Bootstrap primary color */
+        }
+
+        .pagination .page-link:hover {
+            color: #0056b3;
+            /* Darker shade for hover */
+        }
+    </style>
+    <section class="content-main">
+        <div class="content-header">
+            <div>
+                <h2 class="content-title card-title">Products grid</h2>
+                <p>Lorem ipsum dolor sit amet.</p>
+            </div>
+            <div>
+                <a href="/admin/addproducts" class="btn btn-primary btn-sm rounded">Add new product</a>
+            </div>
+        </div>
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row gx-3 row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 row-cols-xxl-5"
+                    id="product-list">
+                    <% products.forEach(function(product) { %>
+                        <div class="col">
+                            <div class="card card-product-grid">
+                                <a href="" class="hidden">
+                                    <%= product._id %>
+                                </a>
+                                <a href="#" class="img-wrap">
+                                    <img src="/uploads/<%= product.images[0] %>" alt="/assets/imgs/theme/upload.svg" />
+                                </a>
+                                <div class="info-wrap">
+                                    <a href="#" class="title text-truncate">
+                                        <%= product.name %>
+                                    </a>
+                                    <div class="price mb-2">₹<%= product.price %>
+                                    </div>
+                                    <a href="editProduct/<%= product._id %>"
+                                        class="btn btn-sm font-sm rounded btn-brand">
+                                        <i class="material-icons md-edit"></i> Edit
+                                    </a>
+                                    <% if (product.status) { %>
+                                        <button class="btn btn-sm font-sm btn-brand rounded"
+                                            id="productBlock-<%= product._id %>"
+                                            onclick="productBlock('<%= product._id %>', 'List')">List</button>
+                                        <% } else { %>
+                                            <button class="btn btn-sm font-sm btn-danger rounded"
+                                                id="productBlock-<%= product._id %>"
+                                                onclick="productBlock('<%= product._id %>', 'UnList')">UnList</button>
+                                            <% } %>
+                                </div>
+                            </div>
+                        </div>
+                        <% }); %>
+                </div>
+            </div>
+            <div class="pagination-area mt-30 mb-50" id="pagination">
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-center" id="pagination-buttons">
+                        <% for (let i=1; i <=totalPages; i++) { %>
+                            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                <a class="page-link" href="#" onclick="loadProducts('<%= i %>')">
+                                    <%= i %>
+                                </a>
+                            </li>
+                            <% } %>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        let currentPage = 1; // Initialize currentPage globally
+
+        async function loadProducts(page = 1) {
+            currentPage = page; // Update the currentPage when loading products
+            try {
+                const response = await axios.get(`/admin/load-products?page=${currentPage}`);
+                const { products, totalPages } = response.data;
+
+                // Clear the current product list
+                const productList = document.getElementById('product-list');
+                productList.innerHTML = '';
+
+                // Render new products
+                products.forEach(product => {
+                    productList.innerHTML += `
+            <div class="col">
+                <div class="card card-product-grid">
+                    <a href="" class="hidden">${product._id}</a>
+                    <a href="#" class="img-wrap">
+                        <img src="/uploads/${product.images[0]}" alt="/assets/imgs/theme/upload.svg" />
+                    </a>
+                    <div class="info-wrap">
+                        <a href="#" class="title text-truncate">${product.name}</a>
+                        <div class="price mb-2">₹${product.price}</div>
+                        <a href="editProduct/${product._id}" class="btn btn-sm font-sm rounded btn-brand">
+                            <i class="material-icons md-edit"></i> Edit
+                        </a>
+                        ${product.status ? `
+                            <button class="btn btn-sm font-sm btn-brand rounded" id="productBlock-${product._id}" 
+                                    onclick="productBlock('${product._id}', 'List')">List</button>
+                        ` : `
+                            <button class="btn btn-sm font-sm btn-danger rounded" id="productBlock-${product._id}" 
+                                    onclick="productBlock('${product._id}', 'UnList')">UnList</button>
+                        `}
+                    </div>
+                </div>
+            </div>
+        `;
+                });
+
+                // Render pagination buttons
+                const paginationButtons = document.getElementById('pagination-buttons');
+                paginationButtons.innerHTML = '';
+                for (let i = 1; i <= totalPages; i++) {
+                    paginationButtons.innerHTML += `
+            <li class="page-item ${i === currentPage ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="loadProducts(${i}); return false;">${i}</a>
+            </li>
+        `;
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+        // Initial load
+        loadProducts();
+
+        function productBlock(productId) {
+            Swal.fire({
+                title: "Do you want to save the changes?",
+                showCancelButton: true,
+                confirmButtonText: 'Yes',
+                customClass: {
+                    title: 'swal2-title',
+                    htmlContainer: 'swal2-html-container'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    axios.post(`/admin/productBlock?id=${productId}`)
+                        .then((response) => {
+                            if (response.data.success == 1) {
+                                const button = document.getElementById(`productBlock-${productId}`);
+                                if (button.classList.contains('btn-danger')) {
+                                    button.classList.remove('btn-danger');
+                                    button.classList.add('btn-brand');
+                                    button.innerHTML = 'List';
+                                } else {
+                                    button.classList.remove('btn-brand');
+                                    button.classList.add('btn-danger');
+                                    button.innerHTML = 'UnList';
+                                }
+                            }
+                        })
+                        .catch((error) => {
+                            console.log(error);
+                        });
+                    Swal.fire("changed!", "", "success");
+                } else if (result.isDenied) {
+                    Swal.fire("Changes are not Saved", "", "info");
+                }
+            });
+        }
+    </script>
+
+    <%- include('adfooter') %>

@@ -1,0 +1,219 @@
+<%- include('adheader') %>
+<section class="content-main">
+    <div class="content-header">
+        <div>
+            <h2 class="content-title card-title">Categories</h2>
+            <p>Add, edit or delete a category</p>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <form method="post" id="categoryForm" onsubmit="return validateForm()">
+                        <div class="mb-4">
+                            <label for="category_name" class="form-label">Name</label>
+                            <input type="text" placeholder="Type here" class="form-control" name="name" id="category_name" />
+                            <div id="nameError" style="color: red; display: none;"></div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Description</label>
+                            <textarea placeholder="Type here" class="form-control" name="description" id="description"></textarea>
+                            <div id="descriptionError" style="color: red; display: none;"></div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Create category</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-9">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <% if (typeof message !== 'undefined') { %>
+                                    <p style="color: red;" class="d-inline-flex p-2"><%= message %>*</p>
+                                <% } %>
+                                <tr>
+                                    <th>SI No.</th>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>No. of Products</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% for(let i = 0; i < categories.length; i++) { %>
+                                <tr data-id="<%= categories[i]._id %>">
+                                    <td><%= i + 1 %></td>
+                                    <td><b><%= categories[i].name %></b></td>
+                                    <td><%= categories[i].description %></td>
+                                    <td>15</td>
+                                    <td>
+                                        <% if (!categories[i].is_hide) { %>
+                                            <span class="badge rounded-pill alert-success" id="status-<%= categories[i]._id %>">Listed</span>
+                                        <% } else { %>
+                                            <span class="badge rounded-pill alert-danger" id="status-<%= categories[i]._id %>">Unlisted</span>
+                                        <% } %>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="dropdown">
+                                            <a href="#" data-bs-toggle="dropdown" class="btn btn-light rounded btn-sm font-sm">
+                                                <i class="material-icons md-more_horiz"></i>
+                                            </a>
+                                            <div class="dropdown-menu">
+                                                <a class="dropdown-item" href="/admin/editCategory/<%= categories[i]._id %>">Edit info</a>
+                                                <% if (categories[i].is_hide == 0) { %>
+                                                    <a class="dropdown-item text-danger" onclick="activeOrInactive('<%= categories[i]._id %>', 'Hide' )" id="hide-<%=  categories[i]._id %>">Hide</a>
+                                                <% } else { %>
+                                                    <a class="dropdown-item text-success" onclick="activeOrInactive('<%= categories[i]._id %>', 'Show')" id="hide-<%=  categories[i]._id %>">Show</a>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+function validateForm() {
+    const name = document.getElementById('category_name').value;
+    const description = document.getElementById('description').value;
+    const nameError = document.getElementById('nameError');
+    const descriptionError = document.getElementById('descriptionError');
+
+    // Reset previous error messages
+    nameError.style.display = 'none';
+    descriptionError.style.display = 'none';
+
+    // Regular expression to check for special characters
+    const specialCharPattern = /[!@#$%^&*(),.?":{}|<>+=-]/;
+    const multipleSpacesPattern = /\s{2,}/;
+
+    // Validate category name
+    if (name === '') {
+        nameError.textContent = 'Please enter a category name. This field cannot be empty.';
+        nameError.style.display = 'block';
+        return false;
+    }
+    if (name.trim() === '') {
+        nameError.textContent = 'The category name cannot be empty or consist only of spaces.';
+        nameError.style.display = 'block';
+        return false;
+    }
+    if (multipleSpacesPattern.test(name)) {
+        nameError.textContent = 'The category name cannot contain consecutive spaces. Please correct this.';
+        nameError.style.display = 'block';
+        return false;
+    }
+    if (name.length < 3 || name.length > 50 || specialCharPattern.test(name)) {
+        nameError.textContent = 'The category name must be between 3 and 50 characters and cannot contain special characters.';
+        nameError.style.display = 'block';
+        return false;
+    }
+
+    // Validate description
+    if (description === '') {
+        descriptionError.textContent = 'Please enter a description. This field cannot be empty.';
+        descriptionError.style.display = 'block';
+        return false;
+    }
+    if (multipleSpacesPattern.test(description) || description.length < 10 || description.length > 200 || specialCharPattern.test(description)) {
+        descriptionError.textContent = 'The description must be between 10 and 200 characters and cannot contain consecutive spaces or special characters.';
+        descriptionError.style.display = 'block';
+        return false;
+    }
+
+    return true; // Form is valid
+}
+
+document.getElementById('categoryForm').addEventListener('submit', async function (event) {
+    event.preventDefault(); // Prevent default form submission
+
+    if (!validateForm()) return; // Validate the form
+
+    const name = document.getElementById('category_name').value;
+    const description = document.getElementById('description').value;
+
+    try {
+        const response = await fetch('/admin/categories', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name, description }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Redirect to the categories page or update the UI
+            window.location.href = '/admin/categories';
+        } else {
+            // Handle error message returned from the server
+            const message = result.error || 'Failed to add category.';
+            document.getElementById('nameError').textContent = message;
+            document.getElementById('nameError').style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error adding category:', error);
+    }
+});
+
+function activeOrInactive(categoryId) {
+    Swal.fire({
+        title: "Do you want to save the changes?",
+        showCancelButton: true,
+        confirmButtonText: 'Yes',
+        customClass: {
+            title: 'swal2-title',
+            htmlContainer: 'swal2-html-container'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            axios.post(`/admin/hideCategory?id=${categoryId}`)
+                .then((response) => {
+                    if (response.data.success == 1) {
+                        const button = document.getElementById(`hide-${categoryId}`);
+                        const button2 = document.getElementById(`status-${categoryId}`);
+
+                        if (button.classList.contains('btn-danger')) {
+                            button.classList.remove('btn-danger');
+                            button.classList.add('btn-brand');
+                            button.innerHTML = 'Show';
+                        } else {
+                            button.classList.remove('btn-brand');
+                            button.classList.add('btn-danger');
+                            button.innerHTML = 'Hide';
+                        }
+                        if (button2.classList.contains('alert-success')) {
+                            button2.classList.remove('alert-success');
+                            button2.classList.add('alert-danger');
+                            button2.innerHTML = 'Unlisted';
+                        } else {
+                            button2.classList.remove('alert-danger');
+                            button2.classList.add('alert-success');
+                            button2.innerHTML = 'Listed';
+                        }
+                    }
+                })
+                .catch((error) => {
+                    console.log(error);
+                });
+            Swal.fire("Changed!", "", "success");
+        } else if (result.isDenied) {
+            Swal.fire("Changes are not saved", "", "info");
+        }
+    });
+}
+
+</script>
+
+<%- include('adfooter') %>

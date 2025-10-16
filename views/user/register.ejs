@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup Page</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+    <div class="container d-flex justify-content-center align-items-center vh-100">
+        <div class="row w-100" >
+            <div class="col-md-6 p-4  shadow rounded" style="background-color: #79b2de;" >
+                <h2 class="text-center mb-4">Get Started Now</h2>
+                <form action="/register" method="POST" novalidate >
+                    <% if (typeof error !== 'undefined' && error) { %>
+                        <div class="alert alert-danger"><%= error %></div>
+                    <% } %>
+                    <div class="form-group">
+                        <input type="text" name="name" class="form-control" placeholder="Name" required>
+                        <% if (errors && errors.some(e => e.path === 'name')) { %>
+                            <div class="text-danger"><small><%= errors.find(e => e.path === 'name').msg %></small></div>
+                        <% } %>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" name="email" class="form-control" placeholder="Email address" required>
+                        <% if (errors && errors.some(e => e.path === 'email')) { %>
+                            <div class="text-danger"><small><%= errors.find(e => e.path === 'email').msg %></small></div>
+                        <% } %>
+                    </div>
+                    <div class="form-group">
+                        <input type="mobile" name="mobile" class="form-control" placeholder="Mobile" required>
+                        <% if (errors && errors.some(e => e.path === 'mobile')) { %>
+                            <div class="text-danger"><small><%= errors.find(e => e.path === 'mobile').msg %></small></div>
+                        <% } %>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" name="password" class="form-control" placeholder="Password" required>
+                        <% if (errors && errors.some(e => e.path === 'password')) { %>
+                            <div class="text-danger"><small><%= errors.find(e => e.path === 'password').msg %></small></div>
+                        <% } %>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" name="confirmPassword" class="form-control" placeholder="Confirm password" required>
+                        <% if (errors && errors.some(e => e.path === 'confirmPassword')) { %>
+                            <div class="text-danger"><small><%= errors.find(e => e.path === 'confirmPassword').msg %></small></div>
+                        <% } %>
+                    </div>
+                    <button type="submit" class="btn btn-dark btn-block">Signup</button>
+                </form>
+                <p class="text-center mt-3">Have an account? <a href="/login" style="color: brown;">Sign In</a></p>
+            </div>
+            <div class="col-md-6 d-none d-md-block bg-cover" style="background-image: url('assets/imgs/theme/regimg.jpg'); 
+                width: 50%;
+                background-size: cover;
+                background-position: center;
+                 "></div>
+        </div>
+    </div>
+</body>
+</html>

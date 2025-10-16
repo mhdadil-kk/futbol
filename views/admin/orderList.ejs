@@ -1,0 +1,77 @@
+<%- include('adheader') %>
+<style>
+    .pagination .active .page-link {
+        background-color: #007bff; /* Bootstrap primary color */
+        color: white;
+    }
+    .pagination .page-link {
+        color: #007bff;
+    }
+    .pagination .page-link:hover {
+        color: #0056b3;
+    }
+</style>
+
+<section class="content-main">
+    <div class="content-header">
+        <div>
+            <h2 class="content-title card-title">Order List</h2>
+            <p>Overview of all orders and their status.</p>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <header class="card-header"></header>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>#Order ID</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Total</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Date</th>
+                            <th scope="col" class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% orders.forEach(order => { %>
+                            <tr>
+                                <td>#<%= order._id.toString().slice(-5).toUpperCase() %></td>
+                                <td><%= order.user ? order.user.name : 'No User Data' %></td>
+                                <td><%= order.user ? order.user.email : 'No User Data' %></td>
+                                <td>₹<%= order.totalPrice.toFixed(2) %></td>
+                                <td>
+                                    <span class="badge <%= order.status === 'Pending' ? 'alert-warning' : 'alert-success' %>">
+                                        <%= order.status %>
+                                    </span>
+                                </td>
+                                <td><%= new Date(order.orderDate).toLocaleDateString() %></td>
+                                <td class="text-end">
+                                    <a href="orders/<%= order._id %>" class="btn btn-md rounded font-sm">Details</a>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-area mt-30 mb-50">
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-center">
+                        <% for (let i = 1; i <= totalPages; i++) { %>
+                            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                <a class="page-link" href="/admin/orders?page=<%= i %>"><%= i %></a>
+                            </li>
+                        <% } %>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</section>
+
+<%- include('adfooter') %>

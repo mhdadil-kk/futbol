@@ -1,0 +1,227 @@
+<%- include('adheader') %>
+
+    <section class="content-main">
+        <div class="content-header">
+            <div>
+                <h2 class="content-title card-title">Dashboard</h2>
+                <p>Whole data about your business here</p>
+            </div>
+            <div>
+                <a href="/admin/sales-report" class="btn btn-primary">
+                    <i class="text-muted material-icons md-post_add"></i>Create report
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="card card-body mb-4">
+                    <article class="icontext">
+                        <span class="icon icon-sm rounded-circle bg-primary-light">
+                            <i class="text-primary material-icons md-monetization_on"></i>
+                        </span>
+                        <div class="text">
+                            <h6 class="mb-1 card-title">Revenue</h6>
+                            <span>₹<%= Revenue %></span>
+                            <span class="text-sm">Shipping fees are not included</span>
+                        </div>
+                    </article>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card card-body mb-4">
+                    <article class="icontext">
+                        <span class="icon icon-sm rounded-circle bg-success-light">
+                            <i class="text-success material-icons md-local_shipping"></i>
+                        </span>
+                        <div class="text">
+                            <h6 class="mb-1 card-title">Orders</h6>
+                            <span>
+                                <%= orders.length %>
+                            </span>
+                            <span class="text-sm">Excluding orders in transit</span>
+                        </div>
+                    </article>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card card-body mb-4">
+                    <article class="icontext">
+                        <span class="icon icon-sm rounded-circle bg-warning-light">
+                            <i class="text-warning material-icons md-qr_code"></i>
+                        </span>
+                        <div class="text">
+                            <h6 class="mb-1 card-title">Products</h6>
+                            <span>
+                                <%= Products.length %>
+                            </span>
+                            <span class="text-sm">In <%= categories.length %> Categories</span>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card mb-4">
+                    <article class="card-body">
+                        <h5 class="card-title">Sale statistics</h5>
+                        <select id="salesSelect">
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Yearly</option>
+                        </select>
+                        <canvas id="myChart" height="120px"></canvas>
+                    </article>
+                </div>
+
+              
+
+                <div class="row">
+                    <!-- Best Selling Products Section -->
+                    <div class="col-lg-6">
+                        <div class="card mb-4">
+                            <article class="card-body">
+                                <h5 class="card-title">Best Selling Products</h5>
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Image</th>
+                                            <th>Product Name</th>
+                                            <th>Price</th>
+                                            <th>Sold Quantity</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% topProducts.forEach(product => { %>
+                                            <tr>
+                                                <td><img src="/uploads/<%= product.productDetails.images[0] %>" alt="<%= product.productDetails.name %>" width="50"></td>
+                                                <td><%= product.productDetails.name %></td>
+                                                <td>₹<%= product.productDetails.price %></td>
+                                                <td><%= product.totalQuantity %></td>
+                                            </tr>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </article>
+                        </div>
+                    </div>
+                
+                    <!-- Best Selling Categories Section -->
+                    <div class="col-lg-6">
+                        <div class="card mb-4">
+                            <article class="card-body">
+                                <h5 class="card-title">Best Selling Categories</h5>
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Category Name</th>
+                                            <th>Sold Quantity</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% topCategories.forEach(category => { %>
+                                            <tr>
+                                                <td><%= category.categoryDetails.name %></td>
+                                                <td><%= category.totalQuantity %></td>
+                                            </tr>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </article>
+                        </div>
+                    </div>
+                </div>
+                
+            
+
+        </div>
+    </section>
+
+    <%- include('adfooter') %>
+
+        <!-- Include Chart.js Library -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const ctx = document.getElementById('myChart').getContext('2d');
+
+                const fetchMonthlySales = async () => {
+                    const response = await fetch('/admin/api/monthly-sales');
+                    return await response.json();
+                };
+
+                const fetchYearlySales = async () => {
+                    const response = await fetch('/admin/api/yearly-sales');
+                    return await response.json();
+                };
+
+        
+
+                let myChart; // Variable to hold the chart instance
+                const updateChart = async (type) => {
+                    const salesData = type === 'monthly' ? await fetchMonthlySales() : await fetchYearlySales();
+
+                    let labels, data;
+                    if (type === 'monthly') {
+                        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                        labels = monthNames; // Use the month names as labels
+                        data = monthNames.map((_, index) => {
+                            const monthData = salesData.find(item => item._id.month === index + 1);
+                            return monthData ? monthData.totalProducts : 0; // Return 0 if no data for that month
+                        });
+                    } else {
+                        // For yearly sales
+                        const currentYear = new Date().getFullYear();
+                        const yearRange = Array.from({ length: 5 }, (_, i) => currentYear - 4 + i);                        
+                        labels = yearRange;
+                        data = yearRange.map(year => {
+                            const yearData = salesData.find(item => item._id.year === year);
+                            return yearData ? yearData.totalProducts : 0;
+                        });
+                    }
+
+                    // Check if a chart instance exists and destroy it
+                    if (myChart) {
+                        myChart.destroy();
+                    }
+
+                    // Create the new chart
+                    myChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: type === 'monthly' ? 'Monthly Sales' : 'Yearly Sales',
+                                data: data,
+                                borderColor: 'rgba(44, 120, 220)',
+                                fill: type === 'monthly',
+                                tension: 0.3
+                            }]
+                        },
+                        options: {
+                            plugins: {
+                                legend: {
+                                    labels: {
+                                        usePointStyle: true,
+                                    },
+                                }
+                            }
+                        }
+                    });
+                };
+
+
+
+
+                // Set initial chart
+                updateChart('monthly'); // Set to 'yearly' if desired initially
+
+                // Event listener for chart selection
+                document.getElementById('salesSelect').addEventListener('change', (event) => {
+                    updateChart(event.target.value);
+                });
+            });
+        </script>
